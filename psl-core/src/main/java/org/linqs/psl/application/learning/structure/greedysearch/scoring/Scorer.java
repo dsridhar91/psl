@@ -1,10 +1,12 @@
 package org.linqs.psl.application.learning.structure.greedysearch.scoring;
 
+import java.util.Observable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.linqs.psl.application.ModelApplication;
+import org.linqs.psl.application.learning.weight.TrainingMap;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.config.ConfigBundle;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
+
 
 public abstract class Scorer extends Observable implements ModelApplication
 {
@@ -72,8 +75,7 @@ public abstract class Scorer extends Observable implements ModelApplication
 
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
-
-
+	}
 
 	public double scoreModel() 
 		throws ClassNotFoundException, IllegalAccessException, InstantiationException {
@@ -98,20 +100,25 @@ public abstract class Scorer extends Observable implements ModelApplication
 
 	protected abstract double doScoring();
 
-
-
-	protected void initGroundModel()
-			throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-		trainingMap = new TrainingMap(rvDB, observedDB);
+	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
-		if (trainingMap.getLatentVariables().size() > 0)
+		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
+		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
+
+		trainingMap = new TrainingMap(rvDB, observedDB);
+		if (trainingMap.getLatentVariables().size() > 0) {
 			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
 					"corresponding ObservedAtoms. Latent variables are not supported " +
 					"by this WeightLearningApplication. " +
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
-		Grounding.groundAll(model, trainingMap, reasoner);
+		}
+
+		Grounding.groundAll(model, trainingMap, groundRuleStore);
+		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
-	
+
+
 
 	protected void cleanUpGroundModel() {
 		trainingMap = null;

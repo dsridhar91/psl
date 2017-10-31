@@ -6,8 +6,10 @@ import java.util.Map;
 
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
+import org.linqs.psl.database.Database;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
+import org.linqs.psl.model.Model;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.WeightedRule;
@@ -90,6 +92,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		*		return log P_pseudo - log Z(P_pseudo)
 		*/
 
+		return 1.0;
 	}
 
 	protected double[] computeObservedIncomp() {

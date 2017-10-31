@@ -17,6 +17,13 @@
  */
 package org.linqs.psl.model.rule;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.linqs.psl.PSLTest;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
 import org.linqs.psl.config.ConfigBundle;
@@ -32,6 +39,7 @@ import org.linqs.psl.model.atom.Atom;
 import org.linqs.psl.model.atom.AtomCache;
 import org.linqs.psl.model.atom.AtomManager;
 import org.linqs.psl.model.atom.GroundAtom;
+import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.QueryAtom;
 import org.linqs.psl.model.atom.SimpleAtomManager;
@@ -64,24 +72,71 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ClauseConstructor {
+public class TestTopDownSL {
+	private DataStore dataStore;
+	private Database rvDB;
+	private Database truthDB;
+	private ConfigBundle config;
+	private Model model;
+	private Partition obsPartition;
+	private Partition targetPartition;
+	private Partition truthPartition;
 
-	private Set<StandardPredicate> predicates;
+	private StandardPredicate singlePredicate;
+	private StandardPredicate doublePredicate;
 
-	public ClauseConstructor(Set<StandardPredicate> predicates) {
-		this.predicates = predicates;
+	@Before
+	public void setup() {
+		config = new EmptyBundle();
+		dataStore = new RDBMSDataStore(new H2DatabaseDriver(Type.Memory, this.getClass().getName(), true), config);
+
+		// Predicates
+		PredicateFactory factory = PredicateFactory.getFactory();
+
+		singlePredicate = factory.createStandardPredicate("SinglePredicate", ConstantType.UniqueStringID);
+		dataStore.registerPredicate(singlePredicate);
+
+		doublePredicate = factory.createStandardPredicate("DoublePredicate", ConstantType.UniqueStringID, ConstantType.UniqueStringID);
+		dataStore.registerPredicate(doublePredicate);
+
+		// Data
+		obsPartition = dataStore.getNewPartition();
+		targetPartition = dataStore.getNewPartition();
+
+		Inserter inserter = dataStore.getInserter(singlePredicate, obsPartition);
+		inserter.insert(new UniqueStringID("Alice"));
+		inserter.insert(new UniqueStringID("Bob"));
+
+		Inserter inserter = dataStore.getInserter(doublePredicate, targetPartition);
+		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+
+		Set<StandardPredicate> rvClose = new HashSet<StandardPredicate>();
+		rvClose.add(singlePredicate);
+		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
+
+		truthPartition = dataStore.getNewPartition();
+		Inserter inserter = dataStore.getInserter(doublePredicate, truthPartition);
+		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+		
+		Set<StandardPredicate> truthClose = new HashSet<StandardPredicate>();
+		truthClose.add(singlePredicate);
+		truthDB = dataStore.getDatabase(truthPartition, truthClose);
+
+		//Model
+		Model model = new Model();
 	}
 
-	public void createCandidateClauses(Conjunction clause) {
+	@Test
+	public void testTopDownSL() {
+		StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config);
+		slApp.structLearn();
+		System.out.println(model.toString());
+	}
 
-		Set<Conjunction> candidateClauses = new Set<Conjunction>();
-
-		for(StandardPredicate p : predicates) {
-			arity = p.getArity();
-			//Variable[] args = new 
-			//for(int i = 0; i < arity; i++) {
-			//candidateClauses.add( new Conjunction(clause.flatten(), new QueryAtom
-
-		}
+	@After
+	public void cleanup() {
+		rvDB.close();
+		truthDB.close();
+		dataStore.close();
 	}
 }
