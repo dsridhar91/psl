@@ -73,7 +73,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		if (l1Regularization < 0)
 			throw new IllegalArgumentException("L1 regularization parameter must be non-negative.");
 
-		scaleGradient = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
+		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
 	}
 
 		@Override

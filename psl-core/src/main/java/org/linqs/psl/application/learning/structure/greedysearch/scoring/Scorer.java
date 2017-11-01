@@ -56,6 +56,26 @@ public abstract class Scorer extends Observable implements ModelApplication
 	 * Value is instance of {@link ADMMReasonerFactory}.
 	 */
 	public static final ReasonerFactory REASONER_DEFAULT = new ADMMReasonerFactory();
+
+	/**
+	 * The class to use for ground rule storage.
+	 */
+	public static final String GROUND_RULE_STORE_KEY = CONFIG_PREFIX + ".groundrulestore";
+	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore";
+
+	/**
+	 * The class to use for term storage.
+	 * Should be compatible with REASONER_KEY.
+	 */
+	public static final String TERM_STORE_KEY = CONFIG_PREFIX + ".termstore";
+	public static final String TERM_STORE_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermStore";
+
+	/**
+	 * The class to use for term generator.
+	 * Should be compatible with REASONER_KEY and TERM_STORE_KEY.
+	 */
+	public static final String TERM_GENERATOR_KEY = CONFIG_PREFIX + ".termgenerator";
+	public static final String TERM_GENERATOR_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermGenerator";
 	
 	protected Model model;
 	protected Database rvDB, observedDB;
@@ -64,7 +84,11 @@ public abstract class Scorer extends Observable implements ModelApplication
 	protected final List<WeightedRule> kernels;
 	protected final List<WeightedRule> immutableKernels;
 	protected TrainingMap trainingMap;
+
 	protected Reasoner reasoner;
+	protected GroundRuleStore groundRuleStore;
+	protected TermStore termStore;
+	protected TermGenerator termGenerator;
 	
 
 	public Scorer(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
@@ -122,6 +146,13 @@ public abstract class Scorer extends Observable implements ModelApplication
 
 	protected void cleanUpGroundModel() {
 		trainingMap = null;
+
+		termStore.close();
+		termStore = null;
+
+		groundRuleStore.close();
+		groundRuleStore = null;
+
 		reasoner.close();
 		reasoner = null;
 	}

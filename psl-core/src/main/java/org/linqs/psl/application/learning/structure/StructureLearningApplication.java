@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Observable;
 
 import org.linqs.psl.application.ModelApplication;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
-import org.linqs.psl.database.DatabasePopulator;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
@@ -19,6 +19,15 @@ import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.reasoner.Reasoner;
 import org.linqs.psl.reasoner.ReasonerFactory;
 import org.linqs.psl.reasoner.admm.ADMMReasonerFactory;
+import org.linqs.psl.reasoner.term.TermGenerator;
+import org.linqs.psl.reasoner.term.TermStore;
+
+import com.google.common.collect.Iterables;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
 
 import com.google.common.collect.Iterables;
 
@@ -47,6 +56,26 @@ public abstract class StructureLearningApplication extends Observable implements
 	 * Value is instance of {@link ADMMReasonerFactory}.
 	 */
 	public static final ReasonerFactory REASONER_DEFAULT = new ADMMReasonerFactory();
+
+	/**
+	 * The class to use for ground rule storage.
+	 */
+	public static final String GROUND_RULE_STORE_KEY = CONFIG_PREFIX + ".groundrulestore";
+	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore";
+
+	/**
+	 * The class to use for term storage.
+	 * Should be compatible with REASONER_KEY.
+	 */
+	public static final String TERM_STORE_KEY = CONFIG_PREFIX + ".termstore";
+	public static final String TERM_STORE_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermStore";
+
+	/**
+	 * The class to use for term generator.
+	 * Should be compatible with REASONER_KEY and TERM_STORE_KEY.
+	 */
+	public static final String TERM_GENERATOR_KEY = CONFIG_PREFIX + ".termgenerator";
+	public static final String TERM_GENERATOR_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermGenerator";
 	
 	protected Model model;
 	protected Database rvDB, observedDB;
