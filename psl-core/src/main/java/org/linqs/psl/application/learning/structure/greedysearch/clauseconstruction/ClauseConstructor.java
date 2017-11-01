@@ -72,16 +72,20 @@ public class ClauseConstructor {
 		this.predicates = predicates;
 	}
 
-	public void createCandidateClauses(Conjunction clause) {
+	public Set<Conjunction> createCandidateClauses(Set<Conjunction> clauses) {
 
 		Set<Conjunction> candidateClauses = new Set<Conjunction>();
 
-		for(StandardPredicate p : predicates) {
-			arity = p.getArity();
-			//Variable[] args = new 
-			//for(int i = 0; i < arity; i++) {
-			//candidateClauses.add( new Conjunction(clause.flatten(), new QueryAtom
-
+		for(Conjunction c: clauses) {
+			for(StandardPredicate p : predicates) {
+				arity = p.getArity();
+				Variable[] args = new Variable[arity];
+				for(int i = 0; i < arity; i++) {
+					args[i] = new Variable("A");
+				}
+				candidateClauses.add( new Conjunction(c.flatten(), new QueryAtom(p, args)))
+			}
 		}
+		return candidateClauses;
 	}
 }
