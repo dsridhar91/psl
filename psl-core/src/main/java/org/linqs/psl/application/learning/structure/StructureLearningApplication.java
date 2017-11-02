@@ -116,10 +116,9 @@ public abstract class StructureLearningApplication extends Observable implements
 			else
 				immutableKernels.add(k);
 				/* Learns new weights */
-		doStructLearn();
+		doStructureLearn();
 		
 		kernels.clear();
-		cleanUpGroundModel();
 	}
 	
 	protected abstract void doStructureLearn();

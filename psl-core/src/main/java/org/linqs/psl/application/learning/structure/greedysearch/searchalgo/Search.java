@@ -2,7 +2,7 @@ package org.linqs.psl.application.learning.structure.greedysearch.searchalgo;
 
 import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
-import org.linqs.psl.application.learning.structure.greedysearch.scorer.WeightedPseudoLogLikelihood;
+import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +67,8 @@ public abstract class Search extends Observable implements ModelApplication
 	public Set<WeightedRule> search(){
 
 		initClauseConstruction();
-		doSearch();
+		Set<WeightedRule> rules = doSearch();
+		return rules;
 
 	}
 

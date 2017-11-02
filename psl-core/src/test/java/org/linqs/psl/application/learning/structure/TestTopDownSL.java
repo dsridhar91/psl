@@ -26,6 +26,8 @@ import org.junit.Test;
 import org.linqs.psl.PSLTest;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
+import org.linqs.psl.application.learning.structure.StructureLearningApplication;
+import org.linqs.psl.application.learning.structure.greedysearch.TopDownStructureLearning;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.EmptyBundle;
 import org.linqs.psl.database.DataStore;
@@ -107,15 +109,15 @@ public class TestTopDownSL {
 		inserter.insert(new UniqueStringID("Alice"));
 		inserter.insert(new UniqueStringID("Bob"));
 
-		Inserter inserter = dataStore.getInserter(doublePredicate, targetPartition);
+		inserter = dataStore.getInserter(doublePredicate, targetPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 
 		Set<StandardPredicate> rvClose = new HashSet<StandardPredicate>();
 		rvClose.add(singlePredicate);
 		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
 
-		truthPartition = dataStore.getNewPartition();
-		Inserter inserter = dataStore.getInserter(doublePredicate, truthPartition);
+		truthPartition = dataStore.getPartition("truth_partition");
+		inserter = dataStore.getInserter(doublePredicate, truthPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 		
 		Set<StandardPredicate> truthClose = new HashSet<StandardPredicate>();
@@ -128,9 +130,16 @@ public class TestTopDownSL {
 
 	@Test
 	public void testTopDownSL() {
-		StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config);
-		slApp.structLearn();
-		System.out.println(model.toString());
+		try {
+			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config);
+			slApp.structLearn();
+			System.out.println(model.toString());
+		} catch(Exception ex) {
+			System.out.println(ex);
+			ex.printStackTrace();
+			fail("Exception thrown");
+		}
+		
 	}
 
 	@After

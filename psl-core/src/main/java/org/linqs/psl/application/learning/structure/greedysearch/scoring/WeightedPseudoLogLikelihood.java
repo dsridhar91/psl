@@ -62,6 +62,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected final boolean scalePLL;
 	protected double[] truthIncompatibility;
 	protected double[] expectedIncompatibility;
+	protected double[] numGroundings;
+
 
 	public WeightedPseudoLogLikelihood(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
 		super(model, rvDB, observedDB, config);
@@ -95,21 +97,26 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		return 1.0;
 	}
 
-	protected double[] computeObservedIncomp() {
-		numGroundings = new double[kernels.size()];
-		double[] truthIncompatibility = new double[kernels.size()];
+/*	protected double[] computeObservedIncomp() {
+		numGroundings = new double[rules.size()];
+		fullObservedIncompatibility = new double[rules.size() + immutableRules.size()];
 		setLabeledRandomVariables();
-		
-		/* Computes the observed incompatibilities and numbers of groundings */
-		for (int i = 0; i < kernels.size(); i++) {
-			for (GroundRule gk : reasoner.getGroundKernels(kernels.get(i))) {
-				truthIncompatibility[i] += ((WeightedGroundRule) gk).getIncompatibility();
+
+		// Computes the observed incompatibilities and numbers of groundings.
+		for (int i = 0; i < rules.size(); i++) {
+			for (GroundRule groundRule : groundRuleStore.getGroundRules(rules.get(i))) {
+				fullObservedIncompatibility[i] += ((WeightedGroundRule) groundRule).getIncompatibility();
 				numGroundings[i]++;
 			}
 		}
-		
-		return truthIncompatibility;
-	}
+		for (int i = 0; i < immutableRules.size(); i++) {
+			for (GroundRule groundRule : groundRuleStore.getGroundRules(immutableRules.get(i))) {
+				fullObservedIncompatibility[rules.size() + i] += ((WeightedGroundRule) groundRule).getIncompatibility();
+			}
+		}
+
+		return Arrays.copyOf(fullObservedIncompatibility, rules.size());
+	} */
 	
 	/**
 	 * Computes the expected (unweighted) total incompatibility of the
@@ -118,11 +125,12 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	 * 
 	 * @return expected incompatibilities, ordered according to kernels
 	 */
-	protected double[] computeExpectedIncomp(){
+	/*protected double[] computeExpectedIncomp(){
 
-		/*TODO: implement this following MaxPseudoLikelihood*/
+		/*TODO: implement this following MaxPseudoLikelihood
 
-	}
+		
+	}*/
 	
 	protected double computeRegularizer() {
 		double l2 = 0;

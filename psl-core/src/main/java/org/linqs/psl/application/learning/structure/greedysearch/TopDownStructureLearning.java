@@ -1,8 +1,10 @@
-package org.linqs.psl.application.learning.structure;
+package org.linqs.psl.application.learning.structure.greedysearch;
 
 import org.linqs.psl.application.learning.structure.StructureLearningApplication;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
+import org.linqs.psl.model.Model;
+import org.linqs.psl.database.Database;
 
 
 /**
@@ -14,7 +16,7 @@ import org.linqs.psl.config.ConfigManager;
  */
 
 
-public abstract class TopDownStructureLearning  extends StructureLearningApplication{
+public class TopDownStructureLearning  extends StructureLearningApplication {
 	
 	
 	/**

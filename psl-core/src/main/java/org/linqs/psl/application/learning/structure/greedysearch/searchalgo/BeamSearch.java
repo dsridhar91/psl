@@ -2,7 +2,7 @@ package org.linqs.psl.application.learning.structure.greedysearch.searchalgo;
 
 import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
-import org.linqs.psl.application.learning.structure.greedysearch.scorer.WeightedPseudoLogLikelihood;
+import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
@@ -13,6 +13,7 @@ import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.predicate.StandardPredicate;
 
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +44,7 @@ public class BeamSearch extends Search{
 	}
 
 	@Override
-	public abstract Set<WeightedRule> doSearch(){
+	public Set<WeightedRule> doSearch(){
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
@@ -51,9 +54,13 @@ public class BeamSearch extends Search{
 		}
 
 
+		Conjunction bestClause = null;
 		Set<Conjunction> candidateClauses = this.clConstr.createCandidateClauses(beam);
-		Conjunction bestClause = candidateClauses.get(0);
-		WeightedRule bestRule = new WeightedRule(bestClause, 1.0, true);
+		for (Conjunction c: candidateClauses) {
+			bestClause = c;
+		      	break;
+		}	       
+		WeightedRule bestRule = new WeightedLogicalRule(bestClause, 1.0, true);
 		bestRules.add(bestRule);
 
 		return bestRules;

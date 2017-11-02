@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.linqs.psl.model.rule;
+package org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction;
 
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
@@ -74,16 +74,16 @@ public class ClauseConstructor {
 
 	public Set<Conjunction> createCandidateClauses(Set<Conjunction> clauses) {
 
-		Set<Conjunction> candidateClauses = new Set<Conjunction>();
+		HashSet<Conjunction> candidateClauses = new HashSet<Conjunction>();
 
 		for(Conjunction c: clauses) {
 			for(StandardPredicate p : predicates) {
-				arity = p.getArity();
+				int arity = p.getArity();
 				Variable[] args = new Variable[arity];
 				for(int i = 0; i < arity; i++) {
 					args[i] = new Variable("A");
 				}
-				candidateClauses.add( new Conjunction(c.flatten(), new QueryAtom(p, args)))
+				candidateClauses.add( new Conjunction(c.flatten(), new QueryAtom(p, args)));
 			}
 		}
 		return candidateClauses;

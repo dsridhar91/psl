@@ -1,31 +1,27 @@
 package org.linqs.psl.application.learning.structure.greedysearch.scoring;
 
-import java.util.Observable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 
 import org.linqs.psl.application.ModelApplication;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.learning.weight.TrainingMap;
-import org.linqs.psl.database.Database;
-import org.linqs.psl.model.Model;
+import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
+import org.linqs.psl.config.Factory;
+import org.linqs.psl.database.Database;
+import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
-import org.linqs.psl.model.rule.GroundRule;
-import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.WeightedRule;
-import org.linqs.psl.model.weight.NegativeWeight;
-import org.linqs.psl.model.weight.PositiveWeight;
-import org.linqs.psl.model.weight.Weight;
-import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.reasoner.Reasoner;
 import org.linqs.psl.reasoner.ReasonerFactory;
 import org.linqs.psl.reasoner.admm.ADMMReasonerFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.linqs.psl.reasoner.term.TermGenerator;
+import org.linqs.psl.reasoner.term.TermStore;
 
 import com.google.common.collect.Iterables;
 
