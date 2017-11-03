@@ -102,8 +102,8 @@ public class TestTopDownSL {
 		dataStore.registerPredicate(doublePredicate);
 
 		// Data
-		obsPartition = dataStore.getNewPartition();
-		targetPartition = dataStore.getNewPartition();
+		obsPartition = dataStore.getPartition("obs");
+		targetPartition = dataStore.getPartition("target");
 
 		Inserter inserter = dataStore.getInserter(singlePredicate, obsPartition);
 		inserter.insert(new UniqueStringID("Alice"));
@@ -116,12 +116,14 @@ public class TestTopDownSL {
 		rvClose.add(singlePredicate);
 		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
 
-		truthPartition = dataStore.getPartition("truth_partition");
+		System.out.println("Partition IDS:" + targetPartition.toString() + ", " + obsPartition.toString());
+
+		truthPartition = dataStore.getPartition("truth");
 		inserter = dataStore.getInserter(doublePredicate, truthPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 		
 		Set<StandardPredicate> truthClose = new HashSet<StandardPredicate>();
-		truthClose.add(singlePredicate);
+		truthClose.add(doublePredicate);
 		truthDB = dataStore.getDatabase(truthPartition, truthClose);
 
 		//Model

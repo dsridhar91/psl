@@ -31,7 +31,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	public static final String WEIGHT_LEARNING_KEY = CONFIG_PREFIX + ".weightlearning";
 	public static final String SEARCH_ALGO_KEY = CONFIG_PREFIX + ".searchalgo";
 	public static final String SCORING_KEY = CONFIG_PREFIX + ".scoring";
-	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clausecunstructor";
+	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clauseconstructor";
 	
 	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
 		super(model, rvDB, observedDB, config);
