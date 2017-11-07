@@ -71,7 +71,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	protected void doStructureLearn() {
 
 		double initScore = 0.0;
-		Set<Conjunction> unitClauses = getUnitClauses();
+		Set<Formula> unitClauses = getUnitClauses();
 		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
 
@@ -103,9 +103,9 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		
 	}
 
-	private Set<Conjunction> getUnitClauses(){
+	private Set<Formula> getUnitClauses(){
 
-		Set<Conjunction> unitClauses = new HashSet<Conjunction>();
+		Set<Formula> unitClauses = new HashSet<Formula>();
 
 		for (Predicate p : targetPredicates){
 			int arity = p.getArity();
@@ -115,8 +115,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 				arguments[i] = new Variable(String.valueOf((char)(i+65)));
 			}
 
-			Conjunction unitCl = new Conjunction(new QueryAtom(p, arguments));
-			unitClauses.add(unitCl);
+			Formula unitClause = new QueryAtom(p, arguments);
+			unitClauses.add(unitClause);
 
 		}
 		return unitClauses;
