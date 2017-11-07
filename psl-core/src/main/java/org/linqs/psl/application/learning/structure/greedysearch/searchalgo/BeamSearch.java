@@ -16,6 +16,7 @@ import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.Predicate;
 
 
 
@@ -39,12 +40,12 @@ public class BeamSearch extends Search{
 	 */
 	public static final String CONFIG_PREFIX = "beamsearch";
 
-	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, double startingScore, DataStore data, Set<Conjunction> unitClauses) {
-		super(model, rvDB, observedDB, config, startingScore, data, unitClauses);
+	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Conjunction> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
 	}
 
 	@Override
-	public Set<WeightedRule> doSearch(){
+	public Set<WeightedRule> search(double startingScore){
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 

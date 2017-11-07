@@ -13,6 +13,7 @@ import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.model.Model;
+import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
@@ -27,6 +28,8 @@ import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Observable;
 
 import com.google.common.collect.Iterables;
@@ -83,12 +86,18 @@ public abstract class StructureLearningApplication extends Observable implements
 	
 	protected final List<WeightedRule> kernels;
 	protected final List<WeightedRule> immutableKernels;
+
+	protected Set<Predicate> targetPredicates;
+	protected Set<Predicate> observedPredicates;
+
 	
-	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
+	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
 		this.config = config;
+		this.targetPredicates = targetPredicates;
+		this.observedPredicates = observedPredicates;
 
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
@@ -110,6 +119,9 @@ public abstract class StructureLearningApplication extends Observable implements
 	public void structLearn()
 			throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		/* Gathers the CompatibilityKernels */
+
+		// System.out.println(model.getRules());
+
 		for (WeightedRule k : Iterables.filter(model.getRules(), WeightedRule.class))
 			if (k.isWeightMutable())
 				kernels.add(k);

@@ -10,6 +10,7 @@ import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.database.DataStore;
 import org.linqs.psl.model.Model;
+import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
@@ -44,30 +45,30 @@ public abstract class Search extends Observable implements ModelApplication
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
 	protected ClauseConstructor clConstr;
-	protected double startingScore;
 	protected MaxPseudoLikelihood mpll;
 	protected WeightedPseudoLogLikelihood wpll;
-	protected DataStore data;
 	protected Set<Conjunction> unitClauses;
+	protected Set<Predicate> targetPredicates;
+	protected Set<Predicate> observedPredicates;
 
-	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, double startingScore, DataStore data, Set<Conjunction> unitClauses) {
+	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Conjunction> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
 		this.config = config;
-		this.startingScore = startingScore;
-		this.data = data;
 		this.unitClauses = unitClauses;
+		this.targetPredicates = targetPredicates;
+		this.observedPredicates = observedPredicates;
 
 		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
 
 	}
 
-	public Set<WeightedRule> search(){
+	public Set<WeightedRule> doSearch(double startingScore){
 
 		initClauseConstruction();
-		Set<WeightedRule> rules = doSearch();
+		Set<WeightedRule> rules = search(startingScore);
 		return rules;
 
 	}
@@ -75,13 +76,12 @@ public abstract class Search extends Observable implements ModelApplication
 
 	public void initClauseConstruction(){
 
-		Set<StandardPredicate> modelPreds = data.getRegisteredPredicates();
-		clConstr = new ClauseConstructor(modelPreds);
+		clConstr = new ClauseConstructor(targetPredicates, observedPredicates);
 	}
 
 
 
-	public abstract Set<WeightedRule> doSearch();
+	public abstract Set<WeightedRule> search(double startingScore);
 
 
 	@Override

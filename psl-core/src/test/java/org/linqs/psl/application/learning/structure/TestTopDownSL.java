@@ -50,6 +50,7 @@ import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.formula.Implication;
 import org.linqs.psl.model.predicate.PredicateFactory;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.arithmetic.UnweightedArithmeticRule;
@@ -87,6 +88,9 @@ public class TestTopDownSL {
 	private StandardPredicate singlePredicate;
 	private StandardPredicate doublePredicate;
 
+	private Set<StandardPredicate> rvClose;
+	private Set<StandardPredicate> truthClose;
+
 	@Before
 	public void setup() {
 		config = new EmptyBundle();
@@ -112,7 +116,7 @@ public class TestTopDownSL {
 		inserter = dataStore.getInserter(doublePredicate, targetPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 
-		Set<StandardPredicate> rvClose = new HashSet<StandardPredicate>();
+		rvClose = new HashSet<StandardPredicate>();
 		rvClose.add(singlePredicate);
 		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
 
@@ -122,18 +126,24 @@ public class TestTopDownSL {
 		inserter = dataStore.getInserter(doublePredicate, truthPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 		
-		Set<StandardPredicate> truthClose = new HashSet<StandardPredicate>();
+		truthClose = new HashSet<StandardPredicate>();
 		truthClose.add(doublePredicate);
 		truthDB = dataStore.getDatabase(truthPartition, truthClose);
 
 		//Model
-		Model model = new Model();
+		model = new Model();
 	}
 
 	@Test
 	public void testTopDownSL() {
 		try {
-			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config);
+			Set<Predicate> targetPredicates = new HashSet<Predicate>();
+			targetPredicates.add(doublePredicate);
+
+			Set<Predicate> observedPredicates = new HashSet<Predicate>();
+			observedPredicates.add(singlePredicate);
+
+			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config, targetPredicates, observedPredicates);
 			slApp.structLearn();
 			System.out.println(model.toString());
 		} catch(Exception ex) {

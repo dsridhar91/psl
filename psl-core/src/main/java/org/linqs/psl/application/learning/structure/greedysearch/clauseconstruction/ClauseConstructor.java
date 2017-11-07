@@ -40,6 +40,7 @@ import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.formula.Implication;
 import org.linqs.psl.model.predicate.PredicateFactory;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.arithmetic.UnweightedArithmeticRule;
@@ -66,10 +67,13 @@ import java.util.Set;
 
 public class ClauseConstructor {
 
-	private Set<StandardPredicate> predicates;
+	private Set<Predicate> targetPredicates;
+	private Set<Predicate> observedPredicates;
 
-	public ClauseConstructor(Set<StandardPredicate> predicates) {
-		this.predicates = predicates;
+
+	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+		this.targetPredicates = targetPredicates;
+		this.observedPredicates = observedPredicates;
 	}
 
 	public Set<Conjunction> createCandidateClauses(Set<Conjunction> clauses) {
@@ -77,7 +81,7 @@ public class ClauseConstructor {
 		HashSet<Conjunction> candidateClauses = new HashSet<Conjunction>();
 
 		for(Conjunction c: clauses) {
-			for(StandardPredicate p : predicates) {
+			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
 				Variable[] args = new Variable[arity];
 				for(int i = 0; i < arity; i++) {
