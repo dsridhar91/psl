@@ -78,7 +78,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		int iter = 0;
 		while(iter < maxIterations){
 
-			Set<WeightedRule> clauses = searchAlgorithm.doSearch(initScore);
+			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
 			if(clauses.isEmpty()){
 				break;

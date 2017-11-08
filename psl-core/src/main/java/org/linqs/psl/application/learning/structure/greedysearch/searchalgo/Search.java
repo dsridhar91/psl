@@ -16,6 +16,7 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.formula.Conjunction;
+import org.linqs.psl.model.formula.Formula;
 
 
 import com.google.common.collect.Iterables;
@@ -47,11 +48,11 @@ public abstract class Search extends Observable implements ModelApplication
 	protected ClauseConstructor clConstr;
 	protected MaxPseudoLikelihood mpll;
 	protected WeightedPseudoLogLikelihood wpll;
-	protected Set<Conjunction> unitClauses;
+	protected Set<Formula> unitClauses;
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
 
-	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Conjunction> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
@@ -65,23 +66,23 @@ public abstract class Search extends Observable implements ModelApplication
 
 	}
 
-	public Set<WeightedRule> doSearch(double startingScore){
+	public Set<WeightedRule> search(double startingScore){
 
 		initClauseConstruction();
-		Set<WeightedRule> rules = search(startingScore);
+		Set<WeightedRule> rules = doSearch(startingScore);
 		return rules;
 
 	}
 
 
-	public void initClauseConstruction(){
+	protected void initClauseConstruction(){
 
 		clConstr = new ClauseConstructor(targetPredicates, observedPredicates);
 	}
 
 
 
-	public abstract Set<WeightedRule> search(double startingScore);
+	protected abstract Set<WeightedRule> doSearch(double startingScore);
 
 
 	@Override

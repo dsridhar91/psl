@@ -17,7 +17,7 @@ import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.predicate.Predicate;
-
+import org.linqs.psl.model.formula.Formula;
 
 
 import com.google.common.collect.Iterables;
@@ -40,26 +40,26 @@ public class BeamSearch extends Search{
 	 */
 	public static final String CONFIG_PREFIX = "beamsearch";
 
-	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Conjunction> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
 	}
 
 	@Override
-	public Set<WeightedRule> search(double startingScore){
+	protected Set<WeightedRule> doSearch(double startingScore){
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
-		Set<Conjunction> beam = new HashSet<Conjunction>();
-		for (Conjunction c : unitClauses){
+		Set<Formula> beam = new HashSet<Formula>();
+		for (Formula c : unitClauses){
 			beam.add(c);
 		}
 
 
-		Conjunction bestClause = null;
-		Set<Conjunction> candidateClauses = this.clConstr.createCandidateClauses(beam);
-		for (Conjunction c: candidateClauses) {
+		Formula bestClause = null;
+		Set<Formula> candidateClauses = clConstr.createCandidateClauses(beam);
+		for (Formula c: candidateClauses) {
 			bestClause = c;
-		      	break;
+		    break;
 		}	       
 		WeightedRule bestRule = new WeightedLogicalRule(bestClause, 1.0, true);
 		bestRules.add(bestRule);

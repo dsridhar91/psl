@@ -76,18 +76,26 @@ public class ClauseConstructor {
 		this.observedPredicates = observedPredicates;
 	}
 
-	public Set<Conjunction> createCandidateClauses(Set<Conjunction> clauses) {
+	public Set<Formula> createCandidateClauses(Set<Formula> clauses) {
 
-		HashSet<Conjunction> candidateClauses = new HashSet<Conjunction>();
+		HashSet<Formula> candidateClauses = new HashSet<Formula>();
 
-		for(Conjunction c: clauses) {
+		for(Formula c: clauses) {
 			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
 				Variable[] args = new Variable[arity];
 				for(int i = 0; i < arity; i++) {
 					args[i] = new Variable("A");
 				}
-				candidateClauses.add( new Conjunction(c.flatten(), new QueryAtom(p, args)));
+
+				if (c instanceof Conjunction){
+					candidateClauses.add( new Conjunction(((Conjunction) c).flatten(), new QueryAtom(p, args)));					
+				}
+				else{
+					candidateClauses.add( new Conjunction(c, new QueryAtom(p, args)));	
+				}
+
+				
 			}
 		}
 		return candidateClauses;
