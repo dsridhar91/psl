@@ -36,6 +36,8 @@ import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.QueryAtom;
 import org.linqs.psl.model.atom.SimpleAtomManager;
 import org.linqs.psl.model.formula.Conjunction;
+import org.linqs.psl.model.formula.Disjunction;
+import org.linqs.psl.model.formula.Negation;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.formula.Implication;
 import org.linqs.psl.model.predicate.PredicateFactory;
@@ -84,19 +86,25 @@ public class ClauseConstructor {
 			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
 				Variable[] args = new Variable[arity];
+
+				char ch = 'A';
 				for(int i = 0; i < arity; i++) {
-					args[i] = new Variable("A");
+					args[i] = new Variable(String.valueOf((char) (ch + i)));
 				}
 
-				if (c instanceof Conjunction){
-					candidateClauses.add( new Conjunction(((Conjunction) c).flatten(), new QueryAtom(p, args)));					
+				if (c instanceof Disjunction){
+					candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args))));					
 				}
 				else{
-					candidateClauses.add( new Conjunction(c, new QueryAtom(p, args)));	
+					Disjunction newClause = new Disjunction(c, new Negation(new QueryAtom(p, args)));
+					candidateClauses.add(newClause);	
+					System.out.println(newClause.toString());
 				}
-
-				
 			}
+
+		//	for(Disjunction d : candidateClauses) {
+		//		System.out.println(d.toString());
+		//	}
 		}
 		return candidateClauses;
 	}

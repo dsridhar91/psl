@@ -6,6 +6,7 @@ import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.model.formula.Conjunction;
+import org.linqs.psl.model.formula.Negation;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.formula.Implication;
 import org.linqs.psl.model.atom.QueryAtom;
@@ -80,7 +81,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
-			if(clauses.isEmpty()){
+  		if(clauses.isEmpty()){
 				break;
 			}
 
@@ -116,7 +117,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			}
 
 			Formula unitClause = new QueryAtom(p, arguments);
-			unitClauses.add(unitClause);
+			unitClauses.add(new Negation(unitClause));
 
 		}
 		return unitClauses;
