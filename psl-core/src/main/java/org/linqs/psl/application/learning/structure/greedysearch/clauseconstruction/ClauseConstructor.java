@@ -56,10 +56,12 @@ import org.linqs.psl.model.rule.logical.UnweightedLogicalRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.term.Constant;
 import org.linqs.psl.model.term.ConstantType;
+import org.linqs.psl.model.term.Term;
 import org.linqs.psl.model.term.UniqueStringID;
 import org.linqs.psl.model.term.Variable;
 import org.linqs.psl.reasoner.function.FunctionComparator;
 
+import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -78,33 +80,74 @@ public class ClauseConstructor {
 		this.observedPredicates = observedPredicates;
 	}
 
+	public Set<Term> getClauseVariables(Formula c, int arity) {
+
+		Set<Term> vars = new HashSet<Term>();
+		Set<Atom> atoms = new HashSet<Atom>();
+		
+		atoms = c.getAtoms(atoms);
+		for(Atom a: atoms) {
+			for(Term v : a.getArguments()) {
+				vars.add(v);
+			}
+		}
+		
+		char ch = 'A';
+		for(int i = vars.size(); i < arity; i++) {
+			vars.add(new Variable(String.valueOf((char) (ch + i))));
+		}
+
+		return vars;
+	}
+
 	public Set<Formula> createCandidateClauses(Set<Formula> clauses) {
 
-		HashSet<Formula> candidateClauses = new HashSet<Formula>();
+		Set<Formula> candidateClauses = new HashSet<Formula>();
 
 		for(Formula c: clauses) {
 			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
-				Variable[] args = new Variable[arity];
+				Set<Term> vars = getClauseVariables(c, arity);
+
+				int numRules = (int)Math.pow(vars.size(), arity);
+				Term[][] args = new Term[numRules][arity];
+
+				for(int i = 0; i < arity; i++) {
+					int repeat = (int)Math.pow(vars.size(), (arity - i - 1));
+					int count = 0;
+					for(Term v : vars) {
+						for(int j = 0; j < repeat; j++) {
+							args[count++][i] = v;
+						}
+					}
+				}
+				
+				/*for(int i = 0; i < numRules; i++) {
+					System.out.println("");
+					for(int j = 0; j < arity; j++) {
+						System.out.println(args[i][j] + " ");
+					}
+				}
 
 				char ch = 'A';
 				for(int i = 0; i < arity; i++) {
 					args[i] = new Variable(String.valueOf((char) (ch + i)));
-				}
+				}*/
 
 				if (c instanceof Disjunction){
-					candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args))));					
+					for(int i = 0; i < numRules; i++) {
+						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
+					}
 				}
 				else{
-					Disjunction newClause = new Disjunction(c, new Negation(new QueryAtom(p, args)));
+					Disjunction newClause = null;
+					for(int i = 0; i < numRules; i++) {
+						newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
+					}
 					candidateClauses.add(newClause);	
-					System.out.println(newClause.toString());
 				}
 			}
 
-		//	for(Disjunction d : candidateClauses) {
-		//		System.out.println(d.toString());
-		//	}
 		}
 		return candidateClauses;
 	}
