@@ -45,6 +45,7 @@ import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.Rule;
+import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.arithmetic.UnweightedArithmeticRule;
 import org.linqs.psl.model.rule.arithmetic.WeightedArithmeticRule;
 import org.linqs.psl.model.rule.arithmetic.expression.ArithmeticRuleExpression;
@@ -80,7 +81,7 @@ public class ClauseConstructor {
 		this.observedPredicates = observedPredicates;
 	}
 
-	public Set<Term> getClauseVariables(Formula c, int arity) {
+	private Set<Term> getClauseVariables(Formula c, int arity) {
 
 		Set<Term> vars = new HashSet<Term>();
 		Set<Atom> atoms = new HashSet<Atom>();
@@ -93,11 +94,28 @@ public class ClauseConstructor {
 		}
 		
 		char ch = 'A';
-		for(int i = vars.size(); i < arity; i++) {
-			vars.add(new Variable(String.valueOf((char) (ch + i))));
+		for(int i = 0; i < arity - 1; i++) {
+			vars.add(new Variable(String.valueOf((char) (ch + i + vars.size()))));
 		}
 
 		return vars;
+	}
+
+	private Set<Formula> pruneClauses(Set<Formula> clauses) {
+
+		Set<Formula> prunedClauses = new HashSet<Formula>();
+
+		for(Formula c: clauses) {
+			try {
+				WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
+				prunedClauses.add(c);
+			}
+			catch (IllegalArgumentException ex){
+				System.out.println("Removing Clause :" + c);
+			}
+		}
+		
+		return prunedClauses;
 	}
 
 	public Set<Formula> createCandidateClauses(Set<Formula> clauses) {
@@ -115,9 +133,11 @@ public class ClauseConstructor {
 				for(int i = 0; i < arity; i++) {
 					int repeat = (int)Math.pow(vars.size(), (arity - i - 1));
 					int count = 0;
-					for(Term v : vars) {
-						for(int j = 0; j < repeat; j++) {
-							args[count++][i] = v;
+					while(count < numRules) {
+						for(Term v : vars) {
+							for(int j = 0; j < repeat; j++) {
+								args[count++][i] = v;
+							}
 						}
 					}
 				}
@@ -137,18 +157,29 @@ public class ClauseConstructor {
 				if (c instanceof Disjunction){
 					for(int i = 0; i < numRules; i++) {
 						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
+						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new QueryAtom(p, args[i])));					
 					}
 				}
 				else{
 					Disjunction newClause = null;
 					for(int i = 0; i < numRules; i++) {
 						newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
+						candidateClauses.add(newClause);	
+						newClause = new Disjunction(c, new QueryAtom(p, args[i]));
+						candidateClauses.add(newClause);	
 					}
-					candidateClauses.add(newClause);	
 				}
 			}
 
 		}
+
+		candidateClauses = pruneClauses(candidateClauses);
+
+		/*System.out.println("Clauses");
+		for(Formula c: candidateClauses) {
+			System.out.println(c);
+		}*/
+
 		return candidateClauses;
 	}
 }
