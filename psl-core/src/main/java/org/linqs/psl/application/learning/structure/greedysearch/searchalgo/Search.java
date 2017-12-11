@@ -14,16 +14,19 @@ import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.weight.Weight;
+import org.linqs.psl.model.weight.PositiveWeight;
 
 
 import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Observable;
@@ -83,20 +86,25 @@ public abstract class Search extends Observable implements ModelApplication
 	}
 
 
-	private Map<WeightedRule,Double> getRuleWeights(){
-		Map<WeightedRule,Double> ruleWeightMap = HashMap<WeightedRule,Double>();
+	protected Map<WeightedRule,Double> getRuleWeights(){
+		Map<WeightedRule,Double> ruleWeightMap = new HashMap<WeightedRule,Double>();
 		for(Rule r : model.getRules()){
-			double ruleWeight = r.getWeight().getWeight();
-			ruleWeightMap.put(r, ruleWeight);
+			if(r instanceof WeightedRule){
+				double ruleWeight = ((WeightedRule)r).getWeight().getWeight();
+				ruleWeightMap.put(((WeightedRule)r), ruleWeight);
+			}
+			
 		}
-
+		return ruleWeightMap;
 	}
 
-	private void resetRuleWeights(Map<WeightedRule,Double> ruleWeightMap){
+	protected void resetRuleWeights(Map<WeightedRule,Double> ruleWeightMap){
 		for(Rule r : model.getRules()){
-			double ruleWeight = ruleWeightMap.get(r);
-			Weight w = new PositiveWeight(ruleWeight);
-			r.setWeight(w);
+			if(r instanceof WeightedRule){
+				double ruleWeight = ruleWeightMap.get(r);
+				Weight w = new PositiveWeight(ruleWeight);
+				((WeightedRule)r).setWeight(w);
+			}
 		}
 	}
 

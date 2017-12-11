@@ -111,7 +111,7 @@ public class ClauseConstructor {
 				prunedClauses.add(c);
 			}
 			catch (IllegalArgumentException ex){
-				System.out.println("Removing Clause :" + c);
+				// System.out.println("Removing Clause :" + c);
 			}
 		}
 		

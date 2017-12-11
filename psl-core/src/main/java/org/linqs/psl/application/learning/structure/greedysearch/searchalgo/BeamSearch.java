@@ -24,11 +24,14 @@ import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Comparator;
+import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +46,23 @@ public class BeamSearch extends Search{
 	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsize";
 	public static final int BEAM_SIZE_DEFAULT = 10;
 
+	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
+	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
+
+	public static final String SQUARED_POTENTIALS_KEY = CONFIG_PREFIX + ".squared";
+	public static final boolean SQUARED_POTENTIALS_DEFAULT = true;
+
 	protected int beamSize;
+	protected double initRuleWeight;
+	protected boolean useSquaredPotentials;
 
 	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
+
 		beamSize = config.getInt(BEAM_SIZE_KEY, BEAM_SIZE_DEFAULT);
+		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
+		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
+
 	}
 
 	@Override
@@ -57,6 +72,8 @@ public class BeamSearch extends Search{
 		double bestGain = 0.0;
 		Formula bestClause = null;
 		boolean reachedStoppingCondition = false;
+
+		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
 		Set<Formula> beam = new HashSet<Formula>();
 		for (Formula c : unitClauses){
@@ -70,14 +87,23 @@ public class BeamSearch extends Search{
 		
 			for(Formula cc : candidateClauses){
 
-				WeightedRule candidateRule = new WeightedLogicalRule(cc);
+				WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
+				double currentModelScore = -100.00;
 
 				this.model.addRule(candidateRule);
-				this.mpll.learn();
 
-				double currentModelScore = this.wpll.scoreModel();
+				try{
+					this.mpll.learn();
+					currentModelScore = this.wpll.scoreModel();
+				}
+				catch(Exception ex){
+					System.out.println(ex);
+					ex.printStackTrace();
+				}
+				
 				double currentGain = currentModelScore - startingScore;
+				System.out.println("candidate clause: " + cc.toString() + "; current gain: " + currentGain);
 
 				if (currentGain > 0){
 					currentClauseGains.put(cc, currentGain);	
@@ -85,6 +111,12 @@ public class BeamSearch extends Search{
 				
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
+			}
+
+			System.out.println("beam size: " + beam.size());
+
+			if(currentClauseGains.size() == 0){
+				break;
 			}
 
 			List<Formula> topClauses = getTopEntries(currentClauseGains);
@@ -102,30 +134,33 @@ public class BeamSearch extends Search{
 				bestGain = currentBeamBestGain;
 			}
 
-			if(previousBestGain == bestGain || beam.size() == 0){
+			if(previousBestGain == bestGain){
 				reachedStoppingCondition = true;
 			}
 		}
 
-		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
-		bestRules.add(new WeightedLogicalRule(bestClause));
+		if(bestClause != null){
+			bestRules.add(new WeightedLogicalRule(bestClause, initRuleWeight, useSquaredPotentials));
+		}
+		
 		return bestRules;
 
 	}
 
 	private List<Formula> getTopEntries(Map<Formula,Double> map) {
-	    List<Map.Entry<K,V>> list = new LinkedList<>(map.entrySet());
-	    Collections.sort( list, new Comparator<Map.Entry<K, V>>() {
+	    List<Map.Entry<Formula,Double>> list = new LinkedList<>(map.entrySet());
+	    Collections.sort(list, new Comparator<Map.Entry<Formula,Double>>() {
 	        @Override
-	        public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+	        public int compare(Map.Entry<Formula,Double> o1, Map.Entry<Formula,Double> o2) {
 	            return (o1.getValue()).compareTo(o2.getValue());
 	        }
 	    });
 
-	    List<Formula> topKResult = new ArrayList<Formula>();
-	    for(int i = k; i >= 0; i--){
-	    	topKResult.add(list.get(i).getKey());
+	    List<Formula> rankedResults = new ArrayList<Formula>();
+
+	    for(int i = beamSize; i >= 0; i--){
+	    	rankedResults.add(list.get(i).getKey());
 	    }
-	    return topKresult;
+	    return rankedResults;
 	}
 }

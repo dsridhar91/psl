@@ -17,6 +17,7 @@ import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Sear
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 
 import com.google.common.collect.Iterables;
@@ -56,14 +57,25 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clauseconstructor";
 
 	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".maxiter";
-	public static final int MAX_ITERATIONS_DEFAULT = 10;
+	public static final int MAX_ITERATIONS_DEFAULT = 2;
+
+	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
+	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
+
+	public static final String SQUARED_POTENTIALS_KEY = CONFIG_PREFIX + ".squared";
+	public static final boolean SQUARED_POTENTIALS_DEFAULT = true;
+
+	protected double initRuleWeight;
+	protected boolean useSquaredPotentials;
 
 	protected int maxIterations;
 	
 	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		super(model, rvDB, observedDB, config, targetPredicates, observedPredicates);
-		//TODO: implement!
+
 		maxIterations = config.getInteger(MAX_ITERATIONS_KEY, MAX_ITERATIONS_DEFAULT);
+		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
+		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
 
 	}
 	
@@ -71,17 +83,33 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	@Override
 	protected void doStructureLearn() {
 
-		double initScore = 0.0;
+		
 		Set<Formula> unitClauses = getUnitClauses();
 		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
+		double initScore = 1.0;
+
+		for(Formula uc: unitClauses){
+			WeightedRule unitRule = new WeightedLogicalRule(uc, initRuleWeight, useSquaredPotentials);
+			model.addRule(unitRule);
+		}
+		try{
+			initScore = scorer.scoreModel();
+		}
+		catch(Exception ex){
+			ex.printStackTrace();
+		}
+
+		for(Rule r : model.getRules()){
+			model.removeRule(r);
+		}
 
 		int iter = 0;
 		while(iter < maxIterations){
 
 			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
-  		if(clauses.isEmpty()){
+	  		if(clauses.isEmpty()){
 				break;
 			}
 
