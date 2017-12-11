@@ -109,7 +109,6 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		*/
 
 
-		System.out.println("Model:" + model);
 		double incomp = computeObservedIncomp();
 		double marginalProduct = 0;
 		double numRV = 0;
@@ -125,7 +124,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			}
 		}
 		double pll = -1 * (numRV * incomp + marginalProduct);
-		System.out.println("PLL" + pll);
+		//System.out.println("PLL" + pll);
 		return pll;
 	}
 
@@ -145,7 +144,6 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected double computeMarginal(RandomVariableAtom a) {
 		
 		double cumSum = 0.0;
-		System.out.println("For atom:" + a);
 		double step = 1.0 / gridSize; 
 
 		for (int i = 0; i <= gridSize; i++) {
