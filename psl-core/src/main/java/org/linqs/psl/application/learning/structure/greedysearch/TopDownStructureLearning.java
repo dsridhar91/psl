@@ -1,10 +1,12 @@
 package org.linqs.psl.application.learning.structure.greedysearch;
 
 import org.linqs.psl.application.learning.structure.StructureLearningApplication;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.database.Database;
+import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Negation;
 import org.linqs.psl.model.formula.Formula;
@@ -18,6 +20,12 @@ import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
+import org.linqs.psl.reasoner.Reasoner;
+import org.linqs.psl.reasoner.ReasonerFactory;
+import org.linqs.psl.reasoner.admm.ADMMReasonerFactory;
+import org.linqs.psl.reasoner.term.TermGenerator;
+import org.linqs.psl.reasoner.term.TermStore;
+import org.linqs.psl.application.learning.weight.TrainingMap;
 
 import com.google.common.collect.Iterables;
 
@@ -56,17 +64,16 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clauseconstructor";
 
 	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".maxiter";
-	public static final int MAX_ITERATIONS_DEFAULT = 10;
+	public static final int MAX_ITERATIONS_DEFAULT = 1;
 
 	protected int maxIterations;
-	
+
 	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
 		super(model, rvDB, observedDB, config, targetPredicates, observedPredicates);
 		//TODO: implement!
 		maxIterations = config.getInteger(MAX_ITERATIONS_KEY, MAX_ITERATIONS_DEFAULT);
 
 	}
-	
 	
 	@Override
 	protected void doStructureLearn() {
@@ -81,7 +88,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
-  		if(clauses.isEmpty()){
+  			if(clauses.isEmpty()){
 				break;
 			}
 
@@ -89,6 +96,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 				model.addRule(r);	
 			}
 
+			//System.out.println("Printing model");
+			//System.out.println(model);
 			//TODO: Do weight learning
 			try{
 				initScore = scorer.scoreModel();	
@@ -112,7 +121,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			int arity = p.getArity();
 			Variable[] arguments = new Variable[arity];
 			for(int i = 0; i < arity; i++){
-				System.out.println(String.valueOf((char)(i+65)));
+				//System.out.println(String.valueOf((char)(i+65)));
 				arguments[i] = new Variable(String.valueOf((char)(i+65)));
 			}
 

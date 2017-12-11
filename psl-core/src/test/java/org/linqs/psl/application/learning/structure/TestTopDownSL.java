@@ -117,21 +117,27 @@ public class TestTopDownSL {
 		inserter.insert(new UniqueStringID("Bob"));
 
 		inserter = dataStore.getInserter(doublePredicateObs, obsPartition);
-		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+		inserter.insertValue(0.1, new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+		inserter.insertValue(0.2, new UniqueStringID("Bob"),new UniqueStringID("Alice"));
+		inserter.insertValue(0.8, new UniqueStringID("Bob"),new UniqueStringID("Bob"));
+		inserter.insertValue(0.8, new UniqueStringID("Alice"),new UniqueStringID("Alice"));
 
 		inserter = dataStore.getInserter(doublePredicateTar, targetPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+		inserter.insert(new UniqueStringID("Bob"),new UniqueStringID("Alice"));
+		inserter.insert(new UniqueStringID("Bob"),new UniqueStringID("Bob"));
+		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Alice"));
 
 		rvClose = new HashSet<StandardPredicate>();
 		rvClose.add(singlePredicate);
 		rvClose.add(doublePredicateObs);
 		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
 
-		System.out.println("Partition IDS:" + targetPartition.toString() + ", " + obsPartition.toString());
 
 		truthPartition = dataStore.getPartition("truth");
 		inserter = dataStore.getInserter(doublePredicateTar, truthPartition);
 		inserter.insert(new UniqueStringID("Alice"),new UniqueStringID("Bob"));
+		inserter.insert(new UniqueStringID("Bob"),new UniqueStringID("Alice"));
 		
 		truthClose = new HashSet<StandardPredicate>();
 		truthClose.add(doublePredicateTar);

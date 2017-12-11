@@ -1,18 +1,23 @@
 package org.linqs.psl.application.learning.structure.greedysearch.scoring;
 
+import java.lang.Math;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.database.Database;
+import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.weight.NegativeWeight;
 import org.linqs.psl.model.weight.PositiveWeight;
 import org.linqs.psl.model.weight.Weight;
@@ -50,6 +55,9 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	/** Default value for L1_REGULARIZATION_KEY */
 	public static final double L1_REGULARIZATION_DEFAULT = 0.0;
 
+	public static final String GRIDSIZE_KEY = CONFIG_PREFIX + ".gridsize";
+	public static final int GRIDSIZE_DEFAULT = 5;
+
 	/**
 	 * Key for Boolean property that indicates whether to scale pseudolikelihood by number of groundings per predicate
 	 */
@@ -60,6 +68,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected final double l2Regularization;
 	protected final double l1Regularization;
 	protected final boolean scalePLL;
+	protected final int gridSize;
 	protected double[] truthIncompatibility;
 	protected double[] expectedIncompatibility;
 	protected double[] numGroundings;
@@ -71,14 +80,19 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		l2Regularization = config.getDouble(L2_REGULARIZATION_KEY, L2_REGULARIZATION_DEFAULT);
 		if (l2Regularization < 0)
 			throw new IllegalArgumentException("L2 regularization parameter must be non-negative.");
+
 		l1Regularization = config.getDouble(L1_REGULARIZATION_KEY, L1_REGULARIZATION_DEFAULT);
 		if (l1Regularization < 0)
 			throw new IllegalArgumentException("L1 regularization parameter must be non-negative.");
 
+		gridSize = config.getInteger(GRIDSIZE_KEY, GRIDSIZE_DEFAULT);
+		if (gridSize < 0)
+			throw new IllegalArgumentException("Gridsize must be non-negative.");
+
 		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
 	}
 
-		@Override
+	@Override
 	protected double doScoring() {
 
 		double[] avgWeights = new double[kernels.size()];
@@ -94,29 +108,55 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		*		return log P_pseudo - log Z(P_pseudo)
 		*/
 
-		return 1.0;
+
+		System.out.println("Model:" + model);
+		double incomp = computeObservedIncomp();
+		double marginalProduct = 0;
+		double numRV = 0;
+
+		Set<StandardPredicate> targetPredicates = rvDB.getRegisteredPredicates();
+		for(StandardPredicate p: targetPredicates) {
+			if(!rvDB.isClosed(p)) {
+				List<RandomVariableAtom> rvAtoms = rvDB.getAllGroundRandomVariableAtoms(p);
+				for(RandomVariableAtom a : rvAtoms) {
+					numRV++;
+					marginalProduct += computeMarginal(a);
+				}
+			}
+		}
+		double pll = -1 * (numRV * incomp + marginalProduct);
+		System.out.println("PLL" + pll);
+		return pll;
 	}
 
-/*	protected double[] computeObservedIncomp() {
-		numGroundings = new double[rules.size()];
-		fullObservedIncompatibility = new double[rules.size() + immutableRules.size()];
-		setLabeledRandomVariables();
-
-		// Computes the observed incompatibilities and numbers of groundings.
-		for (int i = 0; i < rules.size(); i++) {
-			for (GroundRule groundRule : groundRuleStore.getGroundRules(rules.get(i))) {
-				fullObservedIncompatibility[i] += ((WeightedGroundRule) groundRule).getIncompatibility();
-				numGroundings[i]++;
+	protected double computeObservedIncomp() {
+		Iterable<Rule> rules = model.getRules();
+		double truthIncompatibility = 0;
+		
+		/* Computes the observed incompatibilities and numbers of groundings  */
+		for (Rule r: rules) {
+			for (GroundRule groundRule : groundRuleStore.getGroundRules(r)) {
+				truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
 			}
 		}
-		for (int i = 0; i < immutableRules.size(); i++) {
-			for (GroundRule groundRule : groundRuleStore.getGroundRules(immutableRules.get(i))) {
-				fullObservedIncompatibility[rules.size() + i] += ((WeightedGroundRule) groundRule).getIncompatibility();
-			}
-		}
+		return truthIncompatibility;
+	}
+	
+	protected double computeMarginal(RandomVariableAtom a) {
+		
+		double cumSum = 0.0;
+		System.out.println("For atom:" + a);
+		double step = 1.0 / gridSize; 
 
-		return Arrays.copyOf(fullObservedIncompatibility, rules.size());
-	} */
+		for (int i = 0; i <= gridSize; i++) {
+		       a.setValue(i*step);
+		       //a.commitToDB();
+		       double incomp = computeObservedIncomp();
+		       cumSum += step * Math.exp(-incomp); 
+		}	       
+
+		return Math.log(cumSum);
+	}
 	
 	/**
 	 * Computes the expected (unweighted) total incompatibility of the
@@ -141,8 +181,5 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		}
 		return 0.5 * l2Regularization * l2 + l1Regularization * l1;
 	}
-
-	
-
-
 }
+
