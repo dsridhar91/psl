@@ -101,7 +101,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		double initScore = 1.0;
 
 		Set<Formula> negativePriors = getUnitClauses(false);
-		/*for(Formula np: negativePriors){
+		for(Formula np: negativePriors){
 			WeightedRule unitRule = new WeightedLogicalRule(np, initRuleWeight, useSquaredPotentials);
 			model.addRule(unitRule);
 		}
@@ -110,7 +110,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
-		}*/
+		}
 
 		int iter = 0;
 		while(iter < maxIterations){
@@ -118,10 +118,13 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
 	  		if(clauses.isEmpty()){
+				System.out.println("Empty set of clauses");
 				break;
 			}
 
+			System.out.println("Adding rules");
 			for (WeightedRule r : clauses){
+				System.out.println(r);
 				model.addRule(r);	
 			}
 
@@ -129,16 +132,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			//System.out.println(model);
 			//TODO: Do weight learning
 			try{
-				System.out.println("iTop Down");
-                		Set<StandardPredicate> targetPredicates = rvDB.getRegisteredPredicates();
-	                	for(StandardPredicate p: targetPredicates) {
-        	                	if(!rvDB.isClosed(p)) {
-                	                	List<RandomVariableAtom> rvAtoms = rvDB.getAllGroundRandomVariableAtoms(p);
-	                	                for(RandomVariableAtom a : rvAtoms) {
-        		                                System.out.println("Trurth Value" + a + ":" + a.getValue());
-						}
-					}
-				}		
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){

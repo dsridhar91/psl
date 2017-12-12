@@ -74,6 +74,7 @@ public abstract class Search extends Observable implements ModelApplication
 	public Set<WeightedRule> search(double startingScore){
 
 		initClauseConstruction();
+		System.out.println(model);
 		Set<WeightedRule> rules = doSearch(startingScore);
 		return rules;
 

@@ -140,6 +140,8 @@ public class BeamSearch extends Search{
 				bestClause = currentBeamBestClause;
 				previousBestGain = bestGain;
 				bestGain = currentBeamBestGain;
+				System.out.println("Best Clause:" + bestClause);
+				System.out.println("Best Gain:" + bestGain);
 			}
 
 
@@ -167,7 +169,8 @@ public class BeamSearch extends Search{
 
 	    List<Formula> rankedResults = new ArrayList<Formula>();
 
-	    for(int i = beamSize; i >= 0; i--){
+	    int k = Math.min(list.size(), beamSize) - 1;
+	    for(int i = k; i >= 0; i--){
 	    	rankedResults.add(list.get(i).getKey());
 	    }
 	    return rankedResults;
