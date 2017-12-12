@@ -138,14 +138,13 @@ public class BeamSearch extends Search{
 
 			if (currentBeamBestGain > bestGain){
 				bestClause = currentBeamBestClause;
-				previousBestGain = bestGain;
 				bestGain = currentBeamBestGain;
 				System.out.println("Best Clause:" + bestClause);
 				System.out.println("Best Gain:" + bestGain);
 			}
+			previousBestGain = bestGain;
 
-
-			if(previousBestGain == bestGain){
+			if(Math.abs(previousBestGain - bestGain) >= 0.1 || Math.abs(previousBestGain - bestGain) <= 0.1){
 				reachedStoppingCondition = true;
 			}
 		}
