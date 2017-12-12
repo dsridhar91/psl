@@ -101,9 +101,8 @@ public class BeamSearch extends Search{
 					System.out.println(ex);
 					ex.printStackTrace();
 				}
-				
+
 				double currentGain = currentModelScore - startingScore;
-				System.out.println("candidate clause: " + cc.toString() + "; current gain: " + currentGain);
 
 				if (currentGain > 0){
 					currentClauseGains.put(cc, currentGain);	
@@ -112,8 +111,6 @@ public class BeamSearch extends Search{
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
 			}
-
-			System.out.println("beam size: " + beam.size());
 
 			if(currentClauseGains.size() == 0){
 				break;
@@ -133,6 +130,7 @@ public class BeamSearch extends Search{
 				previousBestGain = bestGain;
 				bestGain = currentBeamBestGain;
 			}
+
 
 			if(previousBestGain == bestGain){
 				reachedStoppingCondition = true;

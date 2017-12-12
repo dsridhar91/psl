@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.linqs.psl.model.rule;
+package org.linqs.psl.application.learning.structure;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -28,6 +28,7 @@ import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
 import org.linqs.psl.application.learning.structure.StructureLearningApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.TopDownStructureLearning;
+import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.EmptyBundle;
 import org.linqs.psl.database.DataStore;
@@ -75,7 +76,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TestTopDownSL {
+public class TestPLLScoring {
 	private DataStore dataStore;
 	private Database rvDB;
 	private Database truthDB;
@@ -100,9 +101,6 @@ public class TestTopDownSL {
 		// Predicates
 		PredicateFactory factory = PredicateFactory.getFactory();
 
-		singlePredicate = factory.createStandardPredicate("SinglePredicate", ConstantType.UniqueStringID);
-		dataStore.registerPredicate(singlePredicate);
-
 		doublePredicateObs = factory.createStandardPredicate("DoublePredicateObs", ConstantType.UniqueStringID, ConstantType.UniqueStringID);
 		dataStore.registerPredicate(doublePredicateObs);
 
@@ -112,11 +110,8 @@ public class TestTopDownSL {
 		obsPartition = dataStore.getPartition("obs");
 		targetPartition = dataStore.getPartition("target");
 
-		Inserter inserter = dataStore.getInserter(singlePredicate, obsPartition);
-		inserter.insert(new UniqueStringID("Alice"));
-		inserter.insert(new UniqueStringID("Bob"));
-
-		inserter = dataStore.getInserter(doublePredicateObs, obsPartition);
+		
+		Inserter inserter = dataStore.getInserter(doublePredicateObs, obsPartition);
 		inserter.insertValue(0.9, new UniqueStringID("Alice"),new UniqueStringID("Bob"));
 		inserter.insertValue(0.9, new UniqueStringID("Bob"),new UniqueStringID("Alice"));
 		inserter.insertValue(0.1, new UniqueStringID("Bob"),new UniqueStringID("Bob"));
@@ -129,7 +124,6 @@ public class TestTopDownSL {
 		inserter.insertValue(0.0, new UniqueStringID("Alice"),new UniqueStringID("Alice"));
 
 		rvClose = new HashSet<StandardPredicate>();
-		rvClose.add(singlePredicate);
 		rvClose.add(doublePredicateObs);
 		rvDB = dataStore.getDatabase(targetPartition, rvClose, obsPartition);
 
@@ -145,21 +139,32 @@ public class TestTopDownSL {
 
 		//Model
 		model = new Model();
+
+		Rule newRule = new WeightedLogicalRule(
+			new Implication(
+				new QueryAtom(doublePredicateObs, new Variable("A"), new Variable("B")),
+				new QueryAtom(doublePredicateTar, new Variable("A"), new Variable("B"))
+			),
+			5.0,
+			false
+		);
+		model.addRule(newRule);
 	}
 
 	@Test
-	public void testTopDownSL() {
+	public void testScoring() {
 		try {
-			Set<Predicate> targetPredicates = new HashSet<Predicate>();
-			targetPredicates.add(doublePredicateTar);
+			// Set<Predicate> targetPredicates = new HashSet<Predicate>();
+			// targetPredicates.add(doublePredicateTar);
 
-			Set<Predicate> observedPredicates = new HashSet<Predicate>();
-			observedPredicates.add(singlePredicate);
-			observedPredicates.add(doublePredicateObs);
+			// Set<Predicate> observedPredicates = new HashSet<Predicate>();
+			// observedPredicates.add(singlePredicate);
+			// observedPredicates.add(doublePredicateObs);
 
-			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config, targetPredicates, observedPredicates);
-			slApp.structLearn();
-			System.out.println(model.toString());
+			WeightedPseudoLogLikelihood pll = new WeightedPseudoLogLikelihood(model, rvDB, truthDB, config);
+			double score = pll.scoreModel();
+			System.out.println(score);
+			
 		} catch(Exception ex) {
 			System.out.println(ex);
 			ex.printStackTrace();

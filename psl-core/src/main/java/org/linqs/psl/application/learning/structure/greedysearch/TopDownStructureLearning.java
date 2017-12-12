@@ -18,6 +18,7 @@ import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Beam
 import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Search;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
+import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
@@ -75,7 +76,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 	protected double initRuleWeight;
 	protected boolean useSquaredPotentials;
-
+	protected ClauseConstructor cc;
 	protected int maxIterations;
 
 	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
@@ -85,19 +86,21 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
 		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
 
+		cc = new ClauseConstructor(targetPredicates, observedPredicates);
+
 	}
 	
 	@Override
 	protected void doStructureLearn() {
 
-		
-		Set<Formula> unitClauses = getUnitClauses();
+		Set<Formula> unitClauses = getUnitClauses(true);
 		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
 		double initScore = 1.0;
 
-		for(Formula uc: unitClauses){
-			WeightedRule unitRule = new WeightedLogicalRule(uc, initRuleWeight, useSquaredPotentials);
+		Set<Formula> negativePriors = getUnitClauses(false);
+		for(Formula np: negativePriors){
+			WeightedRule unitRule = new WeightedLogicalRule(np, initRuleWeight, useSquaredPotentials);
 			model.addRule(unitRule);
 		}
 		try{
@@ -105,10 +108,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
-		}
-
-		for(Rule r : model.getRules()){
-			model.removeRule(r);
 		}
 
 		int iter = 0;
@@ -141,7 +140,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		
 	}
 
-	private Set<Formula> getUnitClauses(){
+	private Set<Formula> getUnitClauses(boolean getPositiveClauses){
 
 		Set<Formula> unitClauses = new HashSet<Formula>();
 
@@ -156,12 +155,12 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			Formula unitClause = new QueryAtom(p, arguments);
 			unitClauses.add(new Negation(unitClause));
 
+			if(getPositiveClauses){
+				unitClauses.add(unitClause);	
+			}
 		}
+
 		return unitClauses;
 	}
-
-	
-	
-	
 	
 }
