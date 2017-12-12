@@ -5,6 +5,7 @@ import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.model.Model;
+import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.model.formula.Conjunction;
@@ -14,6 +15,7 @@ import org.linqs.psl.model.formula.Implication;
 import org.linqs.psl.model.atom.QueryAtom;
 import org.linqs.psl.model.term.Variable;
 import org.linqs.psl.model.predicate.Predicate;
+import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.BeamSearch;
 import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Search;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
@@ -99,7 +101,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		double initScore = 1.0;
 
 		Set<Formula> negativePriors = getUnitClauses(false);
-		for(Formula np: negativePriors){
+		/*for(Formula np: negativePriors){
 			WeightedRule unitRule = new WeightedLogicalRule(np, initRuleWeight, useSquaredPotentials);
 			model.addRule(unitRule);
 		}
@@ -108,7 +110,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
-		}
+		}*/
 
 		int iter = 0;
 		while(iter < maxIterations){
@@ -127,6 +129,16 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			//System.out.println(model);
 			//TODO: Do weight learning
 			try{
+				System.out.println("iTop Down");
+                		Set<StandardPredicate> targetPredicates = rvDB.getRegisteredPredicates();
+	                	for(StandardPredicate p: targetPredicates) {
+        	                	if(!rvDB.isClosed(p)) {
+                	                	List<RandomVariableAtom> rvAtoms = rvDB.getAllGroundRandomVariableAtoms(p);
+	                	                for(RandomVariableAtom a : rvAtoms) {
+        		                                System.out.println("Trurth Value" + a + ":" + a.getValue());
+						}
+					}
+				}		
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){

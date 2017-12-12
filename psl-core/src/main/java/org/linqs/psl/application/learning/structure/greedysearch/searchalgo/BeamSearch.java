@@ -12,6 +12,7 @@ import org.linqs.psl.database.DataStore;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
+import org.linqs.psl.application.learning.weight.TrainingMap;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
@@ -54,6 +55,7 @@ public class BeamSearch extends Search{
 
 	protected int beamSize;
 	protected double initRuleWeight;
+	protected TrainingMap trainingMap;
 	protected boolean useSquaredPotentials;
 
 	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
@@ -72,6 +74,14 @@ public class BeamSearch extends Search{
 		double bestGain = 0.0;
 		Formula bestClause = null;
 		boolean reachedStoppingCondition = false;
+
+		trainingMap = new TrainingMap(rvDB, observedDB);
+		if (trainingMap.getLatentVariables().size() > 0) {
+			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
+					"corresponding ObservedAtoms. Latent variables are not supported " +
+					"by this WeightLearningApplication. " +
+					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
+		}
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
@@ -95,6 +105,7 @@ public class BeamSearch extends Search{
 
 				try{
 					this.mpll.learn();
+					setLabeledRandomVariables();
 					currentModelScore = this.wpll.scoreModel();
 				}
 				catch(Exception ex){
@@ -160,5 +171,14 @@ public class BeamSearch extends Search{
 	    	rankedResults.add(list.get(i).getKey());
 	    }
 	    return rankedResults;
+	}
+
+	/**
+	 * Sets RandomVariableAtoms with training labels to their observed values.
+	 */
+	protected void setLabeledRandomVariables() {
+		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
+			e.getKey().setValue(e.getValue().getValue());
+		}
 	}
 }

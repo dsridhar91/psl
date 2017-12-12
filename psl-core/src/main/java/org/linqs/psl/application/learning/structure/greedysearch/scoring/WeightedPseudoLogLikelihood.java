@@ -97,6 +97,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 		double[] avgWeights = new double[kernels.size()];
 
+
 		/*Stub: loop over the learned weights for current kernels and add to avgWeights*/
 		/* if scaling flag is true, compute num groundings for each target predicate and store in hashmap*/
 
@@ -150,6 +151,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double cumSum = 0.0;
 		double step = 1.0 / gridSize; 
 
+		double currValue = a.getValue();
 		for (int i = 0; i < gridSize; i++) {
 		       a.setValue(i*step);
 		       //a.commitToDB();
@@ -158,6 +160,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		       cumSum += step * Math.exp(-incomp); 
 		}	       
 
+		a.setValue(currValue);
 		return Math.log(cumSum);
 	}
 	

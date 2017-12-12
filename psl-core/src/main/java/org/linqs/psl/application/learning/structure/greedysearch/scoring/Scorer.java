@@ -3,6 +3,7 @@ package org.linqs.psl.application.learning.structure.greedysearch.scoring;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Observable;
 
 import org.linqs.psl.application.ModelApplication;
@@ -11,6 +12,7 @@ import org.linqs.psl.application.learning.weight.TrainingMap;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
+import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.model.Model;

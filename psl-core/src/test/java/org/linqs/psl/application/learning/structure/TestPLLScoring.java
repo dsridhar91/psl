@@ -145,8 +145,8 @@ public class TestPLLScoring {
 				new QueryAtom(doublePredicateObs, new Variable("A"), new Variable("B")),
 				new QueryAtom(doublePredicateTar, new Variable("A"), new Variable("B"))
 			),
-			5.0,
-			false
+			6.181598,
+			true
 		);
 		model.addRule(newRule);
 	}
