@@ -151,7 +151,7 @@ public class TestPLLScoring {
 		model.addRule(newRule);
 	}
 
-	@Test
+	// @Test
 	public void testScoring() {
 		try {
 			// Set<Predicate> targetPredicates = new HashSet<Predicate>();

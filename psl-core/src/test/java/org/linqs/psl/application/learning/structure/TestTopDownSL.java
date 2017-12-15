@@ -74,6 +74,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+
 
 public class TestTopDownSL {
 	private DataStore dataStore;
@@ -92,6 +95,8 @@ public class TestTopDownSL {
 	private Set<StandardPredicate> rvClose;
 	private Set<StandardPredicate> truthClose;
 
+	private Map<Predicate,Map<Integer,String>> predicateTypeMap;
+
 	@Before
 	public void setup() {
 		config = new EmptyBundle();
@@ -108,6 +113,17 @@ public class TestTopDownSL {
 
 		doublePredicateTar = factory.createStandardPredicate("DoublePredicateTar", ConstantType.UniqueStringID, ConstantType.UniqueStringID);
 		dataStore.registerPredicate(doublePredicateTar);
+
+		//Predicate type map
+		predicateTypeMap = new HashMap<Predicate,Map<Integer,String>>();
+		for (Predicate p : dataStore.getRegisteredPredicates()){
+			Map <Integer,String> typeMap = new HashMap<Integer,String>();
+			for(int i = 0; i < p.getArity(); i++){
+				typeMap.put(i, "Person");
+			}
+			predicateTypeMap.put(p, typeMap);
+		}
+
 		// Data
 		obsPartition = dataStore.getPartition("obs");
 		targetPartition = dataStore.getPartition("target");
@@ -157,7 +173,7 @@ public class TestTopDownSL {
 			observedPredicates.add(singlePredicate);
 			observedPredicates.add(doublePredicateObs);
 
-			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config, targetPredicates, observedPredicates);
+			StructureLearningApplication slApp = new TopDownStructureLearning(model, rvDB, truthDB, config, targetPredicates, observedPredicates, predicateTypeMap);
 			slApp.structLearn();
 			System.out.println(model.toString());
 		} catch(Exception ex) {

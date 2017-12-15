@@ -21,6 +21,7 @@ import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Sear
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
+import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
@@ -31,14 +32,19 @@ import org.linqs.psl.reasoner.term.TermGenerator;
 import org.linqs.psl.reasoner.term.TermStore;
 import org.linqs.psl.application.learning.weight.TrainingMap;
 
+
 import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Observable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -52,7 +58,7 @@ import java.util.Observable;
 
 public class TopDownStructureLearning  extends StructureLearningApplication {
 	
-	
+	private static final Logger log = LoggerFactory.getLogger(TopDownStructureLearning.class);
 	/**
 	 * Prefix of property keys used by this class.
 	 *
@@ -78,17 +84,15 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 	protected double initRuleWeight;
 	protected boolean useSquaredPotentials;
-	protected ClauseConstructor cc;
 	protected int maxIterations;
 
-	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
-		super(model, rvDB, observedDB, config, targetPredicates, observedPredicates);
+	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
+		super(model, rvDB, observedDB, config, targetPredicates, observedPredicates, predicateTypeMap);
 
 		maxIterations = config.getInteger(MAX_ITERATIONS_KEY, MAX_ITERATIONS_DEFAULT);
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
 		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
 
-		cc = new ClauseConstructor(targetPredicates, observedPredicates);
 
 	}
 	
@@ -96,8 +100,11 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	protected void doStructureLearn() {
 
 		Set<Formula> unitClauses = getUnitClauses(true);
-		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
+
+		MaxPseudoLikelihood mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config);
+		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
+
 		double initScore = 1.0;
 
 		Set<Formula> negativePriors = getUnitClauses(false);
@@ -106,6 +113,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			model.addRule(unitRule);
 		}
 		try{
+			mpll.learn();
+			setLabeledRandomVariables();
 			initScore = scorer.scoreModel();
 		}
 		catch(Exception ex){
@@ -118,20 +127,15 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			Set<WeightedRule> clauses = searchAlgorithm.search(initScore);
 
 	  		if(clauses.isEmpty()){
-				System.out.println("Empty set of clauses");
 				break;
 			}
 
-			System.out.println("Adding rules");
 			for (WeightedRule r : clauses){
-				System.out.println(r);
-				model.addRule(r);	
+				model.addRule(r);
 			}
-
-			//System.out.println("Printing model");
-			//System.out.println(model);
-			//TODO: Do weight learning
 			try{
+				mpll.learn();
+				setLabeledRandomVariables();
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){
@@ -142,7 +146,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			iter++;
 		}
 
-		
+		searchAlgorithm.close();
 	}
 
 	private Set<Formula> getUnitClauses(boolean getPositiveClauses){
@@ -153,7 +157,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			int arity = p.getArity();
 			Variable[] arguments = new Variable[arity];
 			for(int i = 0; i < arity; i++){
-				//System.out.println(String.valueOf((char)(i+65)));
 				arguments[i] = new Variable(String.valueOf((char)(i+65)));
 			}
 

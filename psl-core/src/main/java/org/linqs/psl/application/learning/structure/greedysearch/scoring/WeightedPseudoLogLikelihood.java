@@ -126,8 +126,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		}
 		double pll = -1 * (numRV * incomp + marginalProduct);
 
-		System.out.println(model.toString());
-		System.out.println("Score: " + pll);
+		log.debug(model.toString());
+		log.debug("Score: " + pll);
 
 		//System.out.println("PLL" + pll);
 		return pll;

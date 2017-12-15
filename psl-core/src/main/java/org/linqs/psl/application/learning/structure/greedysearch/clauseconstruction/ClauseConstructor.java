@@ -69,16 +69,20 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 public class ClauseConstructor {
 
 	private Set<Predicate> targetPredicates;
 	private Set<Predicate> observedPredicates;
+	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
 
 
-	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
+		this.predicateTypeMap = predicateTypeMap;
 	}
 
 	private Set<Term> getClauseVariables(Formula c, int arity) {

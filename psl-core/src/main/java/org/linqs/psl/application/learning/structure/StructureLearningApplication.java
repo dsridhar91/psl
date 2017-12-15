@@ -8,6 +8,7 @@ import java.util.Observable;
 import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.util.Grounding;
+import org.linqs.psl.application.learning.weight.TrainingMap;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
@@ -84,6 +85,7 @@ public abstract class StructureLearningApplication extends Observable implements
 	protected Model model;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
+	protected TrainingMap trainingMap;
 	
 	protected final List<WeightedRule> kernels;
 	protected final List<WeightedRule> immutableKernels;
@@ -91,14 +93,17 @@ public abstract class StructureLearningApplication extends Observable implements
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
 
+	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
+
 	
-	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
 		this.config = config;
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
+		this.predicateTypeMap = predicateTypeMap;
 
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
@@ -122,19 +127,37 @@ public abstract class StructureLearningApplication extends Observable implements
 		/* Gathers the CompatibilityKernels */
 
 		// System.out.println(model.getRules());
-
 		for (WeightedRule k : Iterables.filter(model.getRules(), WeightedRule.class))
 			if (k.isWeightMutable())
 				kernels.add(k);
 			else
 				immutableKernels.add(k);
-				/* Learns new weights */
+
+		initTrainingMap();
 		doStructureLearn();
 		
 		kernels.clear();
 	}
+
+	protected void initTrainingMap(){
+		trainingMap = new TrainingMap(rvDB, observedDB);
+		if (trainingMap.getLatentVariables().size() > 0) {
+			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
+					"corresponding ObservedAtoms. Latent variables are not supported " +
+					"by this WeightLearningApplication. " +
+					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
+		}
+	}
 	
 	protected abstract void doStructureLearn();
+
+	
+	protected void setLabeledRandomVariables() {
+		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
+			e.getKey().setValue(e.getValue().getValue());
+		}
+	}
+
 	
 	
 	@Override

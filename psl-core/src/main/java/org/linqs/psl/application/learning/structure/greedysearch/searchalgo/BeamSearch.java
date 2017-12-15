@@ -43,6 +43,8 @@ public class BeamSearch extends Search{
 	 * 
 	 * @see ConfigManager
 	 */
+	private static final Logger log = LoggerFactory.getLogger(BeamSearch.class);
+
 	public static final String CONFIG_PREFIX = "beamsearch";
 	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsize";
 	public static final int BEAM_SIZE_DEFAULT = 10;
@@ -55,11 +57,11 @@ public class BeamSearch extends Search{
 
 	protected int beamSize;
 	protected double initRuleWeight;
-	protected TrainingMap trainingMap;
+	
 	protected boolean useSquaredPotentials;
 
-	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
-		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates);
+	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
+		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap);
 
 		beamSize = config.getInt(BEAM_SIZE_KEY, BEAM_SIZE_DEFAULT);
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
@@ -75,13 +77,7 @@ public class BeamSearch extends Search{
 		Formula bestClause = null;
 		boolean reachedStoppingCondition = false;
 
-		trainingMap = new TrainingMap(rvDB, observedDB);
-		if (trainingMap.getLatentVariables().size() > 0) {
-			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
-					"corresponding ObservedAtoms. Latent variables are not supported " +
-					"by this WeightLearningApplication. " +
-					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
-		}
+		
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
@@ -139,12 +135,12 @@ public class BeamSearch extends Search{
 			if (currentBeamBestGain > bestGain){
 				bestClause = currentBeamBestClause;
 				bestGain = currentBeamBestGain;
-				System.out.println("Best Clause:" + bestClause);
-				System.out.println("Best Gain:" + bestGain);
+				log.warn("Best Clause:" + bestClause);
+				log.warn("Best Gain:" + bestGain);
 			}
 			previousBestGain = bestGain;
 
-			if(Math.abs(previousBestGain - bestGain) >= 0.1 || Math.abs(previousBestGain - bestGain) <= 0.1){
+			if(Math.abs(previousBestGain - bestGain) <= 0.1){
 				reachedStoppingCondition = true;
 			}
 		}
@@ -175,12 +171,5 @@ public class BeamSearch extends Search{
 	    return rankedResults;
 	}
 
-	/**
-	 * Sets RandomVariableAtoms with training labels to their observed values.
-	 */
-	protected void setLabeledRandomVariables() {
-		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
-			e.getKey().setValue(e.getValue().getValue());
-		}
-	}
+	
 }

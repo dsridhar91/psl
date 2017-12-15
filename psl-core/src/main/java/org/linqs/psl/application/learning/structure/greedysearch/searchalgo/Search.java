@@ -20,6 +20,9 @@ import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.weight.Weight;
 import org.linqs.psl.model.weight.PositiveWeight;
+import org.linqs.psl.model.atom.ObservedAtom;
+import org.linqs.psl.model.atom.RandomVariableAtom;
+import org.linqs.psl.application.learning.weight.TrainingMap;
 
 
 import com.google.common.collect.Iterables;
@@ -48,6 +51,7 @@ public abstract class Search extends Observable implements ModelApplication
 	public static final String CONFIG_PREFIX = "search";
 
 	protected Model model;
+	protected TrainingMap trainingMap;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
 	protected ClauseConstructor clConstr;
@@ -56,8 +60,9 @@ public abstract class Search extends Observable implements ModelApplication
 	protected Set<Formula> unitClauses;
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
+	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
 
-	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates) {
+	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
@@ -65,6 +70,7 @@ public abstract class Search extends Observable implements ModelApplication
 		this.unitClauses = unitClauses;
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
+		this.predicateTypeMap = predicateTypeMap;
 
 		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
@@ -73,17 +79,24 @@ public abstract class Search extends Observable implements ModelApplication
 
 	public Set<WeightedRule> search(double startingScore){
 
-		initClauseConstruction();
-		System.out.println(model);
+		init();
 		Set<WeightedRule> rules = doSearch(startingScore);
 		return rules;
 
 	}
 
 
-	protected void initClauseConstruction(){
+	protected void init(){
 
-		clConstr = new ClauseConstructor(targetPredicates, observedPredicates);
+		trainingMap = new TrainingMap(rvDB, observedDB);
+		if (trainingMap.getLatentVariables().size() > 0) {
+			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
+					"corresponding ObservedAtoms. Latent variables are not supported " +
+					"by this WeightLearningApplication. " +
+					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
+		}
+
+		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap);
 	}
 
 
@@ -109,6 +122,15 @@ public abstract class Search extends Observable implements ModelApplication
 		}
 	}
 
+	/**
+	 * Sets RandomVariableAtoms with training labels to their observed values.
+	 */
+	protected void setLabeledRandomVariables() {
+		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
+			e.getKey().setValue(e.getValue().getValue());
+		}
+	}
+
 
 
 	protected abstract Set<WeightedRule> doSearch(double startingScore);
@@ -119,6 +141,8 @@ public abstract class Search extends Observable implements ModelApplication
 		model = null;
 		rvDB = null;
 		config = null;
+		mpll.close();
+		wpll.close();
 	}
 
 
