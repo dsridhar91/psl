@@ -111,7 +111,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		for(Formula np: negativePriors){
 			WeightedRule unitRule = new WeightedLogicalRule(np, initRuleWeight, useSquaredPotentials);
 			model.addRule(unitRule);
-			int numGroundings = Grounding.groundRule(unitRule, groundRuleStore);
+			int numGroundings = Grounding.groundRule(unitRule, trainingMap, groundRuleStore);
 		}
 		try{
 			mpll.learn();
