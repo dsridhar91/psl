@@ -88,6 +88,8 @@ public abstract class Scorer extends Observable implements ModelApplication
 	protected GroundRuleStore groundRuleStore;
 	protected TermStore termStore;
 	protected TermGenerator termGenerator;
+
+	protected boolean passedGroundRuleStore;
 	
 
 	public Scorer(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
@@ -95,6 +97,22 @@ public abstract class Scorer extends Observable implements ModelApplication
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
 		this.config = config;
+
+		passedGroundRuleStore = false;
+
+		kernels = new ArrayList<WeightedRule>();
+		immutableKernels = new ArrayList<WeightedRule>();
+	}
+
+
+	public Scorer(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
+		this.model = model;
+		this.rvDB = rvDB;
+		this.observedDB = observedDB;
+		this.config = config;
+		this.groundRuleStore = groundRuleStore;
+
+		passedGroundRuleStore = true;
 
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
@@ -126,7 +144,11 @@ public abstract class Scorer extends Observable implements ModelApplication
 	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
 		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
-		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+
+		if(!passedGroundRuleStore){
+			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+		}
+		
 		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
 
 		trainingMap = new TrainingMap(rvDB, observedDB);
@@ -137,7 +159,10 @@ public abstract class Scorer extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		Grounding.groundAll(model, trainingMap, groundRuleStore);
+		if(!passedGroundRuleStore){
+			Grounding.groundAll(model, trainingMap, groundRuleStore);	
+		}
+		
 		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
 

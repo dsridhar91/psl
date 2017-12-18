@@ -21,6 +21,7 @@ import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.AtomManager;
 import org.linqs.psl.model.rule.Rule;
+import org.linqs.psl.model.rule.GroundRule;
 
 /**
  * Static utilities for common {@link Model}-grounding tasks.
@@ -60,6 +61,39 @@ public class Grounding {
 				rule.groundAll(atomManager, grs);
 			}
 		}
+	}
+
+	/**
+	 * HACK{DHANYA}
+	 */
+	public static void removeRule(Rule rule, GroundRuleStore grs) {
+
+		Iterator<GroundRule> groundRuleItr = grs.getGroundRules(rule).iterator();
+		while(groundRuleItr.hasNext()){
+			GroundRule gr = groundRuleItr.next();
+			grs.removeGroundRule(gr);
+		}
+	}
+
+	/**
+	 * HACK{DHANYA}
+	 * Calls {@link Rule#groundAll(AtomManager, GroundRuleStore)} only
+	 * for a specified rule.
+	 *
+	 * @param rule  the Rule to ground
+	 * @param atomManager  AtomManager to use for grounding
+	 * @param grs  GroundRuleStore to use for grounding
+	 */
+	public static int groundRule(Rule rule, AtomManager atomManager, GroundRuleStore grs) {
+
+		rule.groundAll(atomManager, grs);
+		Iterator<GroundRule> groundRuleItr = grs.getGroundRules(rule).iterator();
+		int numGroundings = 0;
+		while(groundRuleItr.hasNext()){
+			numGroundings++;
+			groundRuleItr.next();
+		}
+		return numGroundings;
 	}
 
 }

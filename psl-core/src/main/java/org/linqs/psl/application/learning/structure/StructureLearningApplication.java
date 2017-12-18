@@ -68,24 +68,13 @@ public abstract class StructureLearningApplication extends Observable implements
 	public static final String GROUND_RULE_STORE_KEY = CONFIG_PREFIX + ".groundrulestore";
 	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore";
 
-	/**
-	 * The class to use for term storage.
-	 * Should be compatible with REASONER_KEY.
-	 */
-	public static final String TERM_STORE_KEY = CONFIG_PREFIX + ".termstore";
-	public static final String TERM_STORE_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermStore";
-
-	/**
-	 * The class to use for term generator.
-	 * Should be compatible with REASONER_KEY and TERM_STORE_KEY.
-	 */
-	public static final String TERM_GENERATOR_KEY = CONFIG_PREFIX + ".termgenerator";
-	public static final String TERM_GENERATOR_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermGenerator";
+	
 	
 	protected Model model;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
 	protected TrainingMap trainingMap;
+	protected GroundRuleStore groundRuleStore;
 	
 	protected final List<WeightedRule> kernels;
 	protected final List<WeightedRule> immutableKernels;
@@ -95,7 +84,7 @@ public abstract class StructureLearningApplication extends Observable implements
 
 	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
 
-	
+
 	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
 		this.model = model;
 		this.rvDB = rvDB;
@@ -107,6 +96,8 @@ public abstract class StructureLearningApplication extends Observable implements
 
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
+		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+
 	}
 	
 	/**

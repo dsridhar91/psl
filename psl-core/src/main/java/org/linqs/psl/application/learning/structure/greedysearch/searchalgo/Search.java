@@ -23,6 +23,7 @@ import org.linqs.psl.model.weight.PositiveWeight;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.application.learning.weight.TrainingMap;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 
 
 import com.google.common.collect.Iterables;
@@ -52,17 +53,20 @@ public abstract class Search extends Observable implements ModelApplication
 
 	protected Model model;
 	protected TrainingMap trainingMap;
+	protected GroundRuleStore groundRuleStore;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
+	
 	protected ClauseConstructor clConstr;
 	protected MaxPseudoLikelihood mpll;
 	protected WeightedPseudoLogLikelihood wpll;
+	
 	protected Set<Formula> unitClauses;
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
 	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
 
-	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
+	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap, GroundRuleStore groundRuleStore) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
@@ -71,9 +75,10 @@ public abstract class Search extends Observable implements ModelApplication
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
 		this.predicateTypeMap = predicateTypeMap;
+		this.groundRuleStore = groundRuleStore;
 
-		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config);
-		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
+		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 	}
 
@@ -96,7 +101,7 @@ public abstract class Search extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap);
+		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
 	}
 
 

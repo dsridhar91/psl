@@ -101,9 +101,9 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 		Set<Formula> unitClauses = getUnitClauses(true);
 
-		MaxPseudoLikelihood mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config);
-		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap);
-		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
+		MaxPseudoLikelihood mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
+		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 		double initScore = 1.0;
 
@@ -111,6 +111,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		for(Formula np: negativePriors){
 			WeightedRule unitRule = new WeightedLogicalRule(np, initRuleWeight, useSquaredPotentials);
 			model.addRule(unitRule);
+			int numGroundings = Grounding.groundRule(unitRule, groundRuleStore);
 		}
 		try{
 			mpll.learn();

@@ -4,6 +4,7 @@ import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
+import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
@@ -13,6 +14,7 @@ import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.application.learning.weight.TrainingMap;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
@@ -60,8 +62,8 @@ public class BeamSearch extends Search{
 	
 	protected boolean useSquaredPotentials;
 
-	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
-		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap);
+	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap, GroundRuleStore groundRuleStore) {
+		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
 
 		beamSize = config.getInt(BEAM_SIZE_KEY, BEAM_SIZE_DEFAULT);
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
@@ -117,6 +119,7 @@ public class BeamSearch extends Search{
 				
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
+				Grounding.removeRule(candidateRule, groundRuleStore);
 			}
 
 			if(currentClauseGains.size() == 0){
@@ -146,7 +149,10 @@ public class BeamSearch extends Search{
 		}
 
 		if(bestClause != null){
-			bestRules.add(new WeightedLogicalRule(bestClause, initRuleWeight, useSquaredPotentials));
+			WeightedRule bestRule = new WeightedLogicalRule(bestClause, initRuleWeight, useSquaredPotentials);
+			bestRules.add(bestRule);
+			Grounding.groundRule(bestRule, groundRuleStore);
+
 		}
 		
 		return bestRules;

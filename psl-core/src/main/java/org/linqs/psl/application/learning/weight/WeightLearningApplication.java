@@ -107,6 +107,7 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	 * This should always be checked before optimization.
 	 */
 	protected boolean changedRuleWeights;
+	protected boolean passedGroundRuleStore;
 
 	protected Reasoner reasoner;
 	protected GroundRuleStore groundRuleStore;
@@ -120,6 +121,22 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 		this.config = config;
 
 		changedRuleWeights = true;
+		passedGroundRuleStore = false;
+
+		rules = new ArrayList<WeightedRule>();
+		immutableRules = new ArrayList<WeightedRule>();
+	}
+
+
+	public WeightLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
+		this.model = model;
+		this.rvDB = rvDB;
+		this.observedDB = observedDB;
+		this.config = config;
+		this.groundRuleStore = groundRuleStore;
+
+		changedRuleWeights = true;
+		passedGroundRuleStore = true;
 
 		rules = new ArrayList<WeightedRule>();
 		immutableRules = new ArrayList<WeightedRule>();
@@ -166,7 +183,11 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
 		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
-		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+
+		if(!passedGroundRuleStore){
+			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);	
+		}
+
 		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
 
 		trainingMap = new TrainingMap(rvDB, observedDB);
@@ -176,8 +197,10 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 					"by this WeightLearningApplication. " +
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
-
-		Grounding.groundAll(model, trainingMap, groundRuleStore);
+		if(!passedGroundRuleStore){
+			Grounding.groundAll(model, trainingMap, groundRuleStore);	
+		}
+		
 		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
 
