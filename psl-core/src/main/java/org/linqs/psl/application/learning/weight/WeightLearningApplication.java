@@ -210,9 +210,11 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 		termStore.close();
 		termStore = null;
 
-		groundRuleStore.close();
-		groundRuleStore = null;
-
+		if(!passedGroundRuleStore){
+			groundRuleStore.close();
+			groundRuleStore = null;
+		}
+		
 		reasoner.close();
 		reasoner = null;
 	}

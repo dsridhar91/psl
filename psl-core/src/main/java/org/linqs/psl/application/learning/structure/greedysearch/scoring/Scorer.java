@@ -174,8 +174,10 @@ public abstract class Scorer extends Observable implements ModelApplication
 		termStore.close();
 		termStore = null;
 
-		groundRuleStore.close();
-		groundRuleStore = null;
+		if(!passedGroundRuleStore){
+			groundRuleStore.close();
+			groundRuleStore = null;
+		}
 
 		reasoner.close();
 		reasoner = null;

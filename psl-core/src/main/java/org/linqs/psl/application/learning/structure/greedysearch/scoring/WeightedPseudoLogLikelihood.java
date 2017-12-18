@@ -5,7 +5,9 @@ import java.lang.Math;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.HashSet;
 
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
@@ -144,6 +146,17 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			}
 		}
 		return truthIncompatibility;
+	}
+
+	protected double computeObservedIncomp(RandomVariableAtom atom){
+
+		double incompatabilty = 0.0;
+		for(GroundRule groundRule: atom.getRegisteredGroundKernels()){
+			incompatabilty += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
+		}
+
+		return incompatabilty;
+
 	}
 	
 	protected double computeMarginal(RandomVariableAtom a) {

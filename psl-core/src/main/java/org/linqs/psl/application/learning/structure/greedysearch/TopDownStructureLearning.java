@@ -148,6 +148,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		}
 
 		searchAlgorithm.close();
+		mpll.close();
+		wpll.close();
 	}
 
 	private Set<Formula> getUnitClauses(boolean getPositiveClauses){

@@ -156,6 +156,8 @@ public abstract class StructureLearningApplication extends Observable implements
 		model = null;
 		rvDB = null;
 		config = null;
+		groundRuleStore = null;
+
 	}
 	
 }
