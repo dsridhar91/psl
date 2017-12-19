@@ -39,6 +39,19 @@ public class UnweightedLogicalRule extends AbstractLogicalRule implements Unweig
 	public String toString() {
 		return formula.toString() + " .";
 	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+
+		if (other == null || this.getClass() != other.getClass()) {
+			return false;
+		}
+
+		return super.equals(other);
+	}
 	
 	@Override
 	public Rule clone() {

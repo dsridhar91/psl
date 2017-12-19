@@ -134,6 +134,9 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			for (WeightedRule r : clauses){
 				model.addRule(r);
 			}
+
+			// Grounding.checkGroundRuleStore(groundRuleStore);
+
 			try{
 				mpll.learn();
 				setLabeledRandomVariables();

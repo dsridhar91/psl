@@ -19,6 +19,7 @@ package org.linqs.psl.model.rule.logical;
 
 import java.util.List;
 
+import org.linqs.psl.util.MathUtils;
 import org.linqs.psl.model.atom.GroundAtom;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.rule.Rule;
@@ -77,5 +78,23 @@ public class WeightedLogicalRule extends AbstractLogicalRule implements Weighted
 	@Override
 	public void setWeightMutable(boolean mutable) {
 		this.mutable = mutable;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+
+		if (other == null || this.getClass() != other.getClass()) {
+			return false;
+		}
+
+		WeightedLogicalRule otherRule = (WeightedLogicalRule)other;
+		if (this.squared != otherRule.squared || !MathUtils.equals(this.weight.getWeight(), otherRule.weight.getWeight())) {
+			return false;
+		}
+
+		return super.equals(other);
 	}
 }

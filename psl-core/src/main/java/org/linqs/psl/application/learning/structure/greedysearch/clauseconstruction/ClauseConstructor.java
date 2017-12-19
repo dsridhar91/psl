@@ -133,10 +133,9 @@ public class ClauseConstructor implements Iterator<Formula> {
 		nextClause = null;
 		while(!this.candidateClauses.isEmpty()) {
 			int listIndex = candidateClauses.size() - 1; 
-			Formula c = candidateClauses.get(listIndex);
-			candidateClauses.remove(listIndex);
+			Formula c = candidateClauses.remove(listIndex);
 			if(this.isValidClause(c)) {
-				nextClause = clause;
+				nextClause = c;
 				break;
 			}
 		}
@@ -179,10 +178,21 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 		//Remove clauses with zero groundings
 
-		WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
+		WeightedRule rule = new WeightedLogicalRule(c, 5.0, true);
 		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
 		if(numGroundings == 0) {
-			Grounding.removeRule(rule, groundRuleStore);
+			// System.out.println("REMOVING DEAD RULE FROM CC!!!");
+
+			// ((MemoryGroundRuleStore)groundRuleStore).testPrint();
+			
+			// System.out.println(rule);			
+			// Grounding.removeRule(rule, groundRuleStore);
+
+			// System.out.println("AFTER REMOVAL Of DEAD RULE FROM CC!!!");
+
+
+			// ((MemoryGroundRuleStore)groundRuleStore).testPrint();
+			
 			return false;
 		}
 
@@ -234,8 +244,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 		while(!this.candidateClauses.isEmpty()) {
 			int listIndex = candidateClauses.size() - 1; 
-			Formula c = candidateClauses.get(listIndex);
-			candidateClauses.remove(listIndex);
+			Formula c = candidateClauses.remove(listIndex);
 			if(this.isValidClause(c)) {
 				nextClause = c;
 				break;
