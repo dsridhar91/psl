@@ -24,6 +24,7 @@ import org.linqs.psl.model.weight.NegativeWeight;
 import org.linqs.psl.model.weight.PositiveWeight;
 import org.linqs.psl.model.weight.Weight;
 import org.linqs.psl.model.ConstraintBlocker;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +79,24 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 	public WeightedPseudoLogLikelihood(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
 		super(model, rvDB, observedDB, config);
+		
+		l2Regularization = config.getDouble(L2_REGULARIZATION_KEY, L2_REGULARIZATION_DEFAULT);
+		if (l2Regularization < 0)
+			throw new IllegalArgumentException("L2 regularization parameter must be non-negative.");
+
+		l1Regularization = config.getDouble(L1_REGULARIZATION_KEY, L1_REGULARIZATION_DEFAULT);
+		if (l1Regularization < 0)
+			throw new IllegalArgumentException("L1 regularization parameter must be non-negative.");
+
+		gridSize = config.getInteger(GRIDSIZE_KEY, GRIDSIZE_DEFAULT);
+		if (gridSize < 0)
+			throw new IllegalArgumentException("Gridsize must be non-negative.");
+
+		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
+	}
+
+	public WeightedPseudoLogLikelihood(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
+		super(model, rvDB, observedDB, config, groundRuleStore);
 		
 		l2Regularization = config.getDouble(L2_REGULARIZATION_KEY, L2_REGULARIZATION_DEFAULT);
 		if (l2Regularization < 0)

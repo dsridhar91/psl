@@ -178,8 +178,11 @@ public class ClauseConstructor implements Iterator<Formula> {
 		}
 
 		//Remove clauses with zero groundings
-		int numGroundings = Grounding.groundRule((Rule)c, atomManager, groundRuleStore);
+
+		WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
+		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
 		if(numGroundings == 0) {
+			Grounding.removeRule(rule, groundRuleStore);
 			return false;
 		}
 
@@ -189,6 +192,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 	public void createCandidateClauses(Set<Formula> initialClauses) {
 
+		candidateClauses = new ArrayList<Formula>();
 		for(Formula c: initialClauses) {
 			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
@@ -226,6 +230,16 @@ public class ClauseConstructor implements Iterator<Formula> {
 				}
 			}
 
+		}
+
+		while(!this.candidateClauses.isEmpty()) {
+			int listIndex = candidateClauses.size() - 1; 
+			Formula c = candidateClauses.get(listIndex);
+			candidateClauses.remove(listIndex);
+			if(this.isValidClause(c)) {
+				nextClause = c;
+				break;
+			}
 		}
 
 		//candidateClauses = pruneClauses(candidateClauses);

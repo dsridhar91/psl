@@ -27,6 +27,7 @@ import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.model.Model;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.GroundRule;
@@ -189,6 +190,27 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 		nonnegativeWeights = config.getBoolean(NONNEGATIVE_WEIGHTS_KEY, NONNEGATIVE_WEIGHTS_DEFAULT);
 	}
 	
+	public VotedPerceptron(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore  groundRuleStore) {
+		super(model, rvDB, observedDB, config, groundRuleStore);
+		stepSize = config.getDouble(STEP_SIZE_KEY, STEP_SIZE_DEFAULT);
+		if (stepSize <= 0)
+			throw new IllegalArgumentException("Step size must be positive.");
+		numSteps = config.getInt(NUM_STEPS_KEY, NUM_STEPS_DEFAULT);
+		if (numSteps <= 0)
+			throw new IllegalArgumentException("Number of steps must be positive.");
+		l2Regularization = config.getDouble(L2_REGULARIZATION_KEY, L2_REGULARIZATION_DEFAULT);
+		if (l2Regularization < 0)
+			throw new IllegalArgumentException("L2 regularization parameter must be non-negative.");
+		l1Regularization = config.getDouble(L1_REGULARIZATION_KEY, L1_REGULARIZATION_DEFAULT);
+		if (l1Regularization < 0)
+			throw new IllegalArgumentException("L1 regularization parameter must be non-negative.");
+		augmentLoss = config.getBoolean(AUGMENT_LOSS_KEY, AUGMENT_LOSS_DEFAULT);
+		scheduleStepSize = config.getBoolean(STEP_SCHEDULE_KEY, STEP_SCHEDULE_DEFAULT);
+		scaleGradient = config.getBoolean(SCALE_GRADIENT_KEY, SCALE_GRADIENT_DEFAULT);
+		averageSteps = config.getBoolean(AVERAGE_STEPS_KEY, AVERAGE_STEPS_DEFAULT);
+		nonnegativeWeights = config.getBoolean(NONNEGATIVE_WEIGHTS_KEY, NONNEGATIVE_WEIGHTS_DEFAULT);
+	}
+
 	protected void addLossAugmentedRules() {
 		double obsvTrueWeight, obsvFalseWeight;
 		obsvTrueWeight = -1.0;

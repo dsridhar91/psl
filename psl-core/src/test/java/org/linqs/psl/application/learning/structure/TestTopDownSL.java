@@ -95,7 +95,7 @@ public class TestTopDownSL {
 	private Set<StandardPredicate> rvClose;
 	private Set<StandardPredicate> truthClose;
 
-	private Map<Predicate,Map<Integer,String>> predicateTypeMap;
+	private Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap;
 
 	@Before
 	public void setup() {
@@ -115,11 +115,13 @@ public class TestTopDownSL {
 		dataStore.registerPredicate(doublePredicateTar);
 
 		//Predicate type map
-		predicateTypeMap = new HashMap<Predicate,Map<Integer,String>>();
+		predicateTypeMap = new HashMap<Predicate,Map<Integer,Set<String>>>();
 		for (Predicate p : dataStore.getRegisteredPredicates()){
-			Map <Integer,String> typeMap = new HashMap<Integer,String>();
+			Map <Integer,Set<String>> typeMap = new HashMap<Integer,Set<String>>();
 			for(int i = 0; i < p.getArity(); i++){
-				typeMap.put(i, "Person");
+				Set<String> typeSet = new HashSet<String>();
+				typeSet.add("Person");
+				typeMap.put(i, typeSet);
 			}
 			predicateTypeMap.put(p, typeMap);
 		}

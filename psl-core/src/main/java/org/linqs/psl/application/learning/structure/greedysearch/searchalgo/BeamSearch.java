@@ -62,7 +62,7 @@ public class BeamSearch extends Search{
 	
 	protected boolean useSquaredPotentials;
 
-	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap, GroundRuleStore groundRuleStore) {
+	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore) {
 		super(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
 
 		beamSize = config.getInt(BEAM_SIZE_KEY, BEAM_SIZE_DEFAULT);
@@ -93,7 +93,8 @@ public class BeamSearch extends Search{
 			clConstr.createCandidateClauses(beam);
 			Map<Formula,Double> currentClauseGains = new HashMap<Formula,Double>();
 		
-			for(Formula cc : clConstr){
+			while(clConstr.hasNext()) {
+				Formula cc = clConstr.next();
 
 				WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
@@ -151,7 +152,7 @@ public class BeamSearch extends Search{
 		if(bestClause != null){
 			WeightedRule bestRule = new WeightedLogicalRule(bestClause, initRuleWeight, useSquaredPotentials);
 			bestRules.add(bestRule);
-			Grounding.groundRule(bestRule, groundRuleStore);
+			Grounding.groundRule(bestRule, trainingMap, groundRuleStore);
 
 		}
 		

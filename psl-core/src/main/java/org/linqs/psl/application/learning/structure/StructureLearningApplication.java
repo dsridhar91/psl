@@ -82,7 +82,7 @@ public abstract class StructureLearningApplication extends Observable implements
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
 
-	protected Map<Predicate,Map<Integer,Set<String>> predicateTypeMap;
+	protected Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap;
 
 
 	public StructureLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap) {

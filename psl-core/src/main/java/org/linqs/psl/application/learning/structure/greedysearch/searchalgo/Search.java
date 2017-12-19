@@ -64,7 +64,7 @@ public abstract class Search extends Observable implements ModelApplication
 	protected Set<Formula> unitClauses;
 	protected Set<Predicate> targetPredicates;
 	protected Set<Predicate> observedPredicates;
-	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
+	protected Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap;
 
 	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore) {
 		this.model = model;
