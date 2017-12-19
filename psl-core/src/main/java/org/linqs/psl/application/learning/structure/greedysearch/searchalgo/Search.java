@@ -66,7 +66,7 @@ public abstract class Search extends Observable implements ModelApplication
 	protected Set<Predicate> observedPredicates;
 	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
 
-	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap, GroundRuleStore groundRuleStore) {
+	public Search(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
@@ -101,7 +101,7 @@ public abstract class Search extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
+		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore, trainingMap);
 	}
 
 

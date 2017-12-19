@@ -148,7 +148,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		return truthIncompatibility;
 	}
 
-	protected double computeObservedIncomp(RandomVariableAtom atom){
+	/*protected double computeObservedIncomp(RandomVariableAtom atom){
 
 		double incompatabilty = 0.0;
 		for(GroundRule groundRule: atom.getRegisteredGroundKernels()){
@@ -157,7 +157,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 		return incompatabilty;
 
-	}
+	}*/
 	
 	protected double computeMarginal(RandomVariableAtom a) {
 		

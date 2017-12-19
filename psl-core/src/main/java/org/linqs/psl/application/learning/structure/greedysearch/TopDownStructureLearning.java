@@ -86,7 +86,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	protected boolean useSquaredPotentials;
 	protected int maxIterations;
 
-	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
+	public TopDownStructureLearning(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap) {
 		super(model, rvDB, observedDB, config, targetPredicates, observedPredicates, predicateTypeMap);
 
 		maxIterations = config.getInteger(MAX_ITERATIONS_KEY, MAX_ITERATIONS_DEFAULT);

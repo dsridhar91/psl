@@ -90,10 +90,10 @@ public class BeamSearch extends Search{
 
 		while(!reachedStoppingCondition){
 
-			Set<Formula> candidateClauses = clConstr.createCandidateClauses(beam);
+			clConstr.createCandidateClauses(beam);
 			Map<Formula,Double> currentClauseGains = new HashMap<Formula,Double>();
 		
-			for(Formula cc : candidateClauses){
+			for(Formula cc : clConstr){
 
 				WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();

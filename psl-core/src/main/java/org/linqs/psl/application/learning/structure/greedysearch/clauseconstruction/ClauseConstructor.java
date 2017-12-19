@@ -19,6 +19,7 @@ package org.linqs.psl.application.learning.structure.greedysearch.clauseconstruc
 
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
+import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.EmptyBundle;
 import org.linqs.psl.database.DataStore;
@@ -71,18 +72,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 
-public class ClauseConstructor {
+public class ClauseConstructor implements Iterator<Formula> {
 
 	private Set<Predicate> targetPredicates;
 	private Set<Predicate> observedPredicates;
-	protected Map<Predicate,Map<Integer,String>> predicateTypeMap;
+	protected Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap;
+	private GroundRuleStore groundRuleStore;
+	private AtomManager atomManager;
+
+	private List<Formula> candidateClauses;
+	private Formula nextClause;
 
 
-	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,String>> predicateTypeMap) {
+	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
 		this.predicateTypeMap = predicateTypeMap;
+		this.groundRuleStore = groundRuleStore;
+		this.atomManager = atomManager;
+
+		this.candidateClauses = null;
+		this.nextClause = null;
 	}
 
 	private Set<Term> getClauseVariables(Formula c, int arity) {
@@ -105,28 +117,79 @@ public class ClauseConstructor {
 		return vars;
 	}
 
-	private Set<Formula> pruneClauses(Set<Formula> clauses) {
-
-		Set<Formula> prunedClauses = new HashSet<Formula>();
-
-		for(Formula c: clauses) {
-			try {
-				WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
-				prunedClauses.add(c);
-			}
-			catch (IllegalArgumentException ex){
-				// System.out.println("Removing Clause :" + c);
-			}
+	public boolean hasNext() {
+		if (nextClause == null) {
+			return false;
 		}
-		
-		return prunedClauses;
+		else {
+			return true;
+		}
 	}
 
-	public Set<Formula> createCandidateClauses(Set<Formula> clauses) {
+	public Formula next() {
 
-		Set<Formula> candidateClauses = new HashSet<Formula>();
+		Formula clause = nextClause;
 
-		for(Formula c: clauses) {
+		nextClause = null;
+		while(!this.candidateClauses.isEmpty()) {
+			int listIndex = candidateClauses.size() - 1; 
+			Formula c = candidateClauses.get(listIndex);
+			candidateClauses.remove(listIndex);
+			if(this.isValidClause(c)) {
+				nextClause = clause;
+				break;
+			}
+		}
+
+		return clause;
+	}
+
+	public void remove() {
+		throw new UnsupportedOperationException("Remove is not supported");
+	}
+
+	private boolean isValidClause(Formula c) {
+
+		//Remove clauses where a variable does not occur in any non-negated predicate
+		try {
+			WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
+		}
+		catch (IllegalArgumentException ex){
+			return false;
+		}
+			
+		//Remove clauses that are type inconsistent
+		Map<Term, Set<String>> varXtype = new HashMap<Term, Set<String>>();
+		Set<Atom> atoms = new HashSet<Atom>();
+		atoms = c.getAtoms(atoms);
+		for(Atom a: atoms) {
+			Map<Integer, Set<String>> predicateTypes = predicateTypeMap.get(a.getPredicate());
+			Term[] vars = a.getArguments();
+			for(int i = 0; i < vars.length; i++) {
+				Set<String> varTypes = predicateTypes.get(i);
+				if(varXtype.containsKey(vars[i])) {
+					varTypes.retainAll(varXtype.get(vars[i]));
+					if(varTypes.size() == 0) {
+						return false;
+					}
+					varXtype.put(vars[i], varTypes);
+				}
+			}
+		}
+
+		//Remove clauses with zero groundings
+		int numGroundings = Grounding.groundRule((Rule)c, atomManager, groundRuleStore);
+		if(numGroundings == 0) {
+			return false;
+		}
+
+		return true;
+	}
+					
+
+	public void createCandidateClauses(Set<Formula> initialClauses) {
+
+		for(Formula c: initialClauses) {
 			for(Predicate p : observedPredicates) {
 				int arity = p.getArity();
 				Set<Term> vars = getClauseVariables(c, arity);
@@ -146,18 +209,6 @@ public class ClauseConstructor {
 					}
 				}
 				
-				/*for(int i = 0; i < numRules; i++) {
-					System.out.println("");
-					for(int j = 0; j < arity; j++) {
-						System.out.println(args[i][j] + " ");
-					}
-				}
-
-				char ch = 'A';
-				for(int i = 0; i < arity; i++) {
-					args[i] = new Variable(String.valueOf((char) (ch + i)));
-				}*/
-
 				if (c instanceof Disjunction){
 					for(int i = 0; i < numRules; i++) {
 						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
@@ -177,13 +228,7 @@ public class ClauseConstructor {
 
 		}
 
-		candidateClauses = pruneClauses(candidateClauses);
-
-		/*System.out.println("Clauses");
-		for(Formula c: candidateClauses) {
-			System.out.println(c);
-		}*/
-
-		return candidateClauses;
+		//candidateClauses = pruneClauses(candidateClauses);
+		//return candidateClauses;
 	}
 }

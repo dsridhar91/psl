@@ -29,6 +29,7 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 
 /**
  * Learns weights by optimizing the pseudo-log-likelihood of the data using
@@ -104,6 +105,19 @@ public class MaxPseudoLikelihood extends VotedPerceptron {
 			throw new IllegalArgumentException("Minimum width must be positive double.");
 	}
 	
+	public MaxPseudoLikelihood(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
+		super(model, rvDB, observedDB, config, groundRuleStore);
+		bool = config.getBoolean(BOOLEAN_KEY, BOOLEAN_DEFAULT);
+		numSamples = config.getInt(NUM_SAMPLES_KEY, NUM_SAMPLES_DEFAULT);
+		if (numSamples <= 0)
+			throw new IllegalArgumentException("Number of samples must be positive integer.");
+		minWidth = config.getDouble(MIN_WIDTH_KEY, MIN_WIDTH_DEFAULT);
+		if (minWidth <= 0)
+			throw new IllegalArgumentException("Minimum width must be positive double.");
+		constraintTol = config.getDouble(CONSTRAINT_TOLERANCE_KEY, CONSTRAINT_TOLERANCE_DEFAULT);
+		if (constraintTol <= 0)
+			throw new IllegalArgumentException("Minimum width must be positive double.");
+	}
 	/**
 	 * Note: calls super.initGroundModel() first, in order to ground model. 
 	 */

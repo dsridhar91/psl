@@ -23,6 +23,8 @@ import org.linqs.psl.model.atom.AtomManager;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.GroundRule;
 
+import java.util.Iterator;
+
 /**
  * Static utilities for common {@link Model}-grounding tasks.
  */
