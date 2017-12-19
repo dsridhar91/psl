@@ -15,6 +15,8 @@ import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.application.learning.weight.TrainingMap;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
+import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
+import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.formula.Conjunction;
@@ -101,6 +103,10 @@ public class BeamSearch extends Search{
 				double currentModelScore = -100.00;
 
 				this.model.addRule(candidateRule);
+				
+
+				// System.out.println("printing the grs's rules........");
+				// Grounding.checkGroundRuleStore(groundRuleStore);
 
 				try{
 					this.mpll.learn();
@@ -118,9 +124,31 @@ public class BeamSearch extends Search{
 					currentClauseGains.put(cc, currentGain);	
 				}
 				
+				// System.out.println("Current candidate rule:" + candidateRule);
+
+				// System.out.println("printing the model's rules........");
+				// for(Rule r: model.getRules()){
+				// 	System.out.println(r);
+				// }
+
+				// System.out.println("printing the grs's rules........");
+				// Grounding.checkGroundRuleStore(groundRuleStore);
+				// Grounding.checkRules(groundRuleStore);
+
+				System.out.println("Current candidate rule:" + candidateRule);
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
+
+				System.out.println("Before ground rule store rule removal: " + groundRuleStore.size());
+				((MemoryGroundRuleStore)groundRuleStore).testPrint();
+
+				System.out.println(((MemoryGroundRuleStore)groundRuleStore).containsRule(candidateRule));
 				Grounding.removeRule(candidateRule, groundRuleStore);
+
+				
+
+				System.out.println("After ground rule store rule removal: " + groundRuleStore.size());
+				((MemoryGroundRuleStore)groundRuleStore).testPrint();
 			}
 
 			if(currentClauseGains.size() == 0){
@@ -141,6 +169,10 @@ public class BeamSearch extends Search{
 				bestGain = currentBeamBestGain;
 				log.warn("Best Clause:" + bestClause);
 				log.warn("Best Gain:" + bestGain);
+
+				// System.out.println("Best Clause:" + bestClause);
+				// System.out.println("Best Gain:" + bestGain);
+
 			}
 			previousBestGain = bestGain;
 

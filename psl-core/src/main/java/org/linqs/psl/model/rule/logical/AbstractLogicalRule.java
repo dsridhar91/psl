@@ -42,12 +42,14 @@ import org.linqs.psl.reasoner.function.FunctionTerm;
 import org.linqs.psl.reasoner.function.FunctionVariable;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +62,7 @@ abstract public class AbstractLogicalRule extends AbstractRule {
 
 	protected Formula formula;
 	protected final DNFClause clause;
+	private int hash;
 
 	public AbstractLogicalRule(Formula f) {
 		super();
@@ -91,6 +94,18 @@ abstract public class AbstractLogicalRule extends AbstractRule {
 		if (!clause.isQueriable()) {
 			throw new IllegalArgumentException("Formula is not a valid rule for unknown reason.");
 		}
+		// Build up the hash code from positive and negative literals.
+ 		HashCodeBuilder hashBuilder = new HashCodeBuilder();
+ 
+ 		for (Atom atom : clause.getPosLiterals()) {
+ 			hashBuilder.append(atom);
+ 		}
+ 
+ 		for (Atom atom : clause.getNegLiterals()) {
+ 			hashBuilder.append(atom);
+ 		}
+ 
+ 		hash = hashBuilder.toHashCode();
 	}
 
 	@Override
@@ -173,6 +188,40 @@ abstract public class AbstractLogicalRule extends AbstractRule {
 				throw new IllegalArgumentException("Unrecognized type of Term.");
 
 		return atomManager.getAtom(atom.getPredicate(), newArgs);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+
+		if (other == null || !(other instanceof AbstractLogicalRule)) {
+			return false;
+		}
+
+		AbstractLogicalRule otherRule = (AbstractLogicalRule)other;
+
+		if (this.hash != otherRule.hash) {
+			return false;
+		}
+
+		// Final deep equality check.
+		List<Atom> thisPosLiterals = this.clause.getPosLiterals();
+		List<Atom> otherPosLiterals = otherRule.clause.getPosLiterals();
+		if (thisPosLiterals.size() != otherPosLiterals.size()) {
+			return false;
+		}
+
+		List<Atom> thisNegLiterals = this.clause.getNegLiterals();
+		List<Atom> otherNegLiterals = otherRule.clause.getNegLiterals();
+		if (thisNegLiterals.size() != otherNegLiterals.size()) {
+			return false;
+		}
+
+		return
+				(new HashSet<Atom>(thisPosLiterals)).equals(new HashSet<Atom>(otherPosLiterals)) &&
+				(new HashSet<Atom>(thisNegLiterals)).equals(new HashSet<Atom>(otherNegLiterals));
 	}
 
 	abstract protected AbstractGroundLogicalRule groundFormulaInstance(List<GroundAtom> posLiterals, List<GroundAtom> negLiterals);

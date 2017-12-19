@@ -37,6 +37,16 @@ public class MemoryGroundRuleStore implements GroundRuleStore {
 	public MemoryGroundRuleStore() {
 		groundRules = new HashSetValuedHashMap<Rule, GroundRule>();
 	}
+
+
+	public Iterable<Rule> getRules() {
+		return groundRules.keySet();
+	}
+
+
+	public Boolean containsRule(Rule rule) {
+		return groundRules.containsKey(rule);
+	}
 	
 	@Override
 	public void addGroundRule(GroundRule groundRule) {
@@ -74,6 +84,17 @@ public class MemoryGroundRuleStore implements GroundRuleStore {
 	public void removeGroundRule(GroundRule groundRule) {
 		groundRules.removeMapping(groundRule.getRule(), groundRule);
 	}
+
+	public void removeRule(Rule rule) {
+		groundRules.remove(rule);
+	}
+
+	public void testPrint(){
+		for(Rule r : groundRules.keySet()){
+			System.out.println("Rule " + r + ": " + groundRules.get(r).size());
+		}
+	}
+
 	
 	@Override
 	public int size() {
