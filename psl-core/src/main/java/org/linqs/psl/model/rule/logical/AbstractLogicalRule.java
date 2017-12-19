@@ -115,7 +115,7 @@ abstract public class AbstractLogicalRule extends AbstractRule {
 		log.debug("Grounded {} instances of rule {}", numGrounded, this);
 	}
 
-	protected int groundFormula(AtomManager atomManager, GroundRuleStore grs, ResultList res,  VariableAssignment var) {
+	protected int groundFormula(AtomManager atomManager, GroundRuleStore grs, ResultList res, VariableAssignment var) {
 		int numGroundingsAdded = 0;
 		List<GroundAtom> posLiterals = new ArrayList<GroundAtom>(4);
 		List<GroundAtom> negLiterals = new ArrayList<GroundAtom>(4);
@@ -188,6 +188,11 @@ abstract public class AbstractLogicalRule extends AbstractRule {
 				throw new IllegalArgumentException("Unrecognized type of Term.");
 
 		return atomManager.getAtom(atom.getPredicate(), newArgs);
+	}
+
+	@Override
+	public int hashCode() {
+		return hash;
 	}
 
 	@Override
