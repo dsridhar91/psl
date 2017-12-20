@@ -143,14 +143,6 @@ public abstract class StructureLearningApplication extends Observable implements
 	protected abstract void doStructureLearn();
 
 	
-	protected void setLabeledRandomVariables() {
-		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
-			e.getKey().setValue(e.getValue().getValue());
-		}
-	}
-
-	
-	
 	@Override
 	public void close() {
 		model = null;

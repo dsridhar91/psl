@@ -115,7 +115,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		}
 		try{
 			mpll.learn();
-			setLabeledRandomVariables();
 			initScore = scorer.scoreModel();
 		}
 		catch(Exception ex){
@@ -137,7 +136,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 			try{
 				mpll.learn();
-				setLabeledRandomVariables();
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){

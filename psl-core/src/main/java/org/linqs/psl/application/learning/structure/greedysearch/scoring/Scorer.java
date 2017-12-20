@@ -163,6 +163,8 @@ public abstract class Scorer extends Observable implements ModelApplication
 			Grounding.groundAll(model, trainingMap, groundRuleStore);	
 		}
 		
+		setLabeledRandomVariables();
+		
 		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
 

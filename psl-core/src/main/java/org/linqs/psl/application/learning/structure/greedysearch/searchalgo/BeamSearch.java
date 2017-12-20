@@ -108,7 +108,6 @@ public class BeamSearch extends Search{
 
 				try{
 					this.mpll.learn();
-					setLabeledRandomVariables();
 					currentModelScore = this.wpll.scoreModel();
 				}
 				catch(Exception ex){

@@ -127,17 +127,6 @@ public abstract class Search extends Observable implements ModelApplication
 		}
 	}
 
-	/**
-	 * Sets RandomVariableAtoms with training labels to their observed values.
-	 */
-	protected void setLabeledRandomVariables() {
-		for (Map.Entry<RandomVariableAtom, ObservedAtom> e : trainingMap.getTrainingMap().entrySet()) {
-			e.getKey().setValue(e.getValue().getValue());
-		}
-	}
-
-
-
 	protected abstract Set<WeightedRule> doSearch(double startingScore);
 
 
