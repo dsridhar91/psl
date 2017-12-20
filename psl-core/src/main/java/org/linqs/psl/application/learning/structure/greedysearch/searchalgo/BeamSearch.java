@@ -99,7 +99,7 @@ public class BeamSearch extends Search{
 			while(clConstr.hasNext()) {
 				WeightedRule candidateRule = clConstr.next();
 
-				log.info("Current candidate rule:" + candidateRule);
+				log.warn("Current candidate rule:" + candidateRule);
 
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
 				double currentModelScore = -100.00;
