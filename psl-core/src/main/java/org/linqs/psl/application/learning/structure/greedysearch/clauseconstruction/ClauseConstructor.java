@@ -74,7 +74,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class ClauseConstructor implements Iterator<Formula> {
+public class ClauseConstructor implements Iterator<WeightedRule> {
 
 	private Set<Predicate> targetPredicates;
 	private Set<Predicate> observedPredicates;
@@ -83,7 +83,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 	private AtomManager atomManager;
 
 	private List<Formula> candidateClauses;
-	private Formula nextClause;
+	private WeightedRule nextClause;
 
 
 	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
@@ -125,8 +125,8 @@ public class ClauseConstructor implements Iterator<Formula> {
 		while(!this.candidateClauses.isEmpty()) {
 			int listIndex = candidateClauses.size() - 1; 
 			Formula c = candidateClauses.remove(listIndex);
-			if(this.isValidClause(c)) {
-				nextClause = c;
+			nextClause = isValidClause(c);
+			if(nextClause != null) {
 				break;
 			}
 		}
@@ -148,14 +148,14 @@ public class ClauseConstructor implements Iterator<Formula> {
 		throw new UnsupportedOperationException("Remove is not supported");
 	}
 
-	private boolean isValidClause(Formula c) {
+	private WeightedRule isValidClause(Formula c) {
 
 		//Remove clauses where a variable does not occur in any non-negated predicate
 		try {
 			WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
 		}
 		catch (IllegalArgumentException ex){
-			return false;
+			return null;
 		}
 			
 		//Remove clauses that are type inconsistent
@@ -170,7 +170,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 				if(varXtype.containsKey(vars[i])) {
 					varTypes.retainAll(varXtype.get(vars[i]));
 					if(varTypes.size() == 0) {
-						return false;
+						return null;
 					}
 					varXtype.put(vars[i], varTypes);
 				}
@@ -179,7 +179,6 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 		//Remove clauses with zero groundings
 
-		WeightedRule rule = new WeightedLogicalRule(c, 5.0, true);
 		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
 		if(numGroundings == 0) {
 			// System.out.println("REMOVING DEAD RULE FROM CC!!!");
@@ -194,10 +193,10 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 			// ((MemoryGroundRuleStore)groundRuleStore).testPrint();
 			
-			return false;
+			return null;
 		}
 
-		return true;
+		return rule;
 	}
 					
 
