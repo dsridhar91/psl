@@ -138,8 +138,8 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		}
 	}
 
-	public Formula next() {
-		Formula clause = nextClause;
+	public WeightedRule next() {
+		WeightedRule clause = nextClause;
 		nextClause = null;
 		return clause;
 	}
@@ -151,8 +151,9 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	private WeightedRule isValidClause(Formula c) {
 
 		//Remove clauses where a variable does not occur in any non-negated predicate
+		WeightedRule rule = null;
 		try {
-			WeightedRule rule = new WeightedLogicalRule(c, 1.0, true);
+			rule = new WeightedLogicalRule(c, 1.0, true);
 		}
 		catch (IllegalArgumentException ex){
 			return null;

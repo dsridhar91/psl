@@ -145,9 +145,9 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 				}
 			}
 		}
-		double l2_norm = -1 * this.l2_norm() * this.l2Regularization;
-		double struct_norm = -1 * this.num_predicates() * this.l1Regulariztion;
-		double pll = -1 * (numRV * incomp + marginalProduct) + l2_norm + struct_norm;
+		// double l2_norm = -1 * this.l2_norm() * this.l2Regularization;
+		// double struct_norm = -1 * this.num_predicates() * this.l1Regulariztion;
+		double pll = -1 * (numRV * incomp + marginalProduct); // + l2_norm + struct_norm;
 
 		log.debug(model.toString());
 		log.debug("Score: " + pll);
@@ -156,30 +156,30 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		return pll;
 	}
 
-	protected double l2_norm() {
+	// protected double l2_norm() {
 
-		double l2norm = 0.0;
+	// 	double l2norm = 0.0;
 
-		Iterable<Rule> rules = model.getRules();
-		for(Rule r : rules) {
-			w = r.getWeight().getWeight();
-			l2norm += w*w;
-		}
+	// 	Iterable<Rule> rules = model.getRules();
+	// 	for(Rule r : rules) {
+	// 		w = r.getWeight().getWeight();
+	// 		l2norm += w*w;
+	// 	}
 
-		return l2norm;
-	}
+	// 	return l2norm;
+	// }
 
-	protected double num_predicates() {
+	// protected double num_predicates() {
 
-		double numPredicates = 0;
+	// 	double numPredicates = 0;
 
-		Iterable<Rule> rules = model.getRules();
-		for (Rule r: rules) {
-			numPredicates += r.getAtoms().size();
-		}
+	// 	Iterable<Rule> rules = model.getRules();
+	// 	for (Rule r: rules) {
+	// 		numPredicates += r.getAtoms().size();
+	// 	}
 
-		return numPredicates;
-	}
+	// 	return numPredicates;
+	// }
 
 
 	protected double computeObservedIncomp() {

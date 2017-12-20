@@ -108,6 +108,10 @@ abstract public class AbstractLogicalRule extends AbstractRule {
  		hash = hashBuilder.toHashCode();
 	}
 
+	public Formula getFormula() {
+		return formula;
+	}
+
 	@Override
 	public void groundAll(AtomManager atomManager, GroundRuleStore grs) {
 		ResultList res = atomManager.executeQuery(new DatabaseQuery(clause.getQueryFormula(), false));

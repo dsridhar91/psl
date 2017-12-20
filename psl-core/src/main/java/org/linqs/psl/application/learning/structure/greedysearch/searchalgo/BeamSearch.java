@@ -96,16 +96,13 @@ public class BeamSearch extends Search{
 			Map<Formula,Double> currentClauseGains = new HashMap<Formula,Double>();
 		
 			while(clConstr.hasNext()) {
-				Formula cc = clConstr.next();
+				WeightedRule candidateRule = clConstr.next();
 
-				WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
+				// WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
 				double currentModelScore = -100.00;
 
 				this.model.addRule(candidateRule);
-				
-				// System.out.println("printing the grs's rules........");
-				// Grounding.checkGroundRuleStore(groundRuleStore);
 
 				try{
 					this.mpll.learn();
@@ -119,25 +116,16 @@ public class BeamSearch extends Search{
 
 				double currentGain = currentModelScore - startingScore;
 
+
 				if (currentGain > 0){
-					currentClauseGains.put(cc, currentGain);	
+					Formula currentFormula = ((WeightedLogicalRule)candidateRule).getFormula();
+					currentClauseGains.put(currentFormula, currentGain);	
 				}
 
 				for(Rule r : model.getRules()){
 					System.out.println(r);
 				}
 				
-				// System.out.println("Current candidate rule:" + candidateRule);
-
-				// System.out.println("printing the model's rules........");
-				// for(Rule r: model.getRules()){
-				// 	System.out.println(r);
-				// }
-
-				// System.out.println("printing the grs's rules........");
-				// Grounding.checkGroundRuleStore(groundRuleStore);
-				// Grounding.checkRules(groundRuleStore);
-
 				System.out.println("Current candidate rule:" + candidateRule);
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
