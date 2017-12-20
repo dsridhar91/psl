@@ -118,6 +118,18 @@ public class ClauseConstructor implements Iterator<Formula> {
 	}
 
 	public boolean hasNext() {
+		if(nextClause != null) {
+			throw new UnsupportedOperationException("Cannot call hasNext multiple times");
+		}
+
+		while(!this.candidateClauses.isEmpty()) {
+			int listIndex = candidateClauses.size() - 1; 
+			Formula c = candidateClauses.remove(listIndex);
+			if(this.isValidClause(c)) {
+				nextClause = c;
+				break;
+			}
+		}
 		if (nextClause == null) {
 			return false;
 		}
@@ -127,19 +139,8 @@ public class ClauseConstructor implements Iterator<Formula> {
 	}
 
 	public Formula next() {
-
 		Formula clause = nextClause;
-
 		nextClause = null;
-		while(!this.candidateClauses.isEmpty()) {
-			int listIndex = candidateClauses.size() - 1; 
-			Formula c = candidateClauses.remove(listIndex);
-			if(this.isValidClause(c)) {
-				nextClause = c;
-				break;
-			}
-		}
-
 		return clause;
 	}
 
@@ -242,14 +243,6 @@ public class ClauseConstructor implements Iterator<Formula> {
 
 		}
 
-		while(!this.candidateClauses.isEmpty()) {
-			int listIndex = candidateClauses.size() - 1; 
-			Formula c = candidateClauses.remove(listIndex);
-			if(this.isValidClause(c)) {
-				nextClause = c;
-				break;
-			}
-		}
 
 		//candidateClauses = pruneClauses(candidateClauses);
 		//return candidateClauses;
