@@ -196,6 +196,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 			return false;
 		}
 
+		// Grounding.removeRule(rule, groundRuleStore);
 		return true;
 	}
 					
@@ -250,7 +251,7 @@ public class ClauseConstructor implements Iterator<Formula> {
 				break;
 			}
 		}
-
+		
 		//candidateClauses = pruneClauses(candidateClauses);
 		//return candidateClauses;
 	}

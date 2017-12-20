@@ -104,7 +104,6 @@ public class BeamSearch extends Search{
 
 				this.model.addRule(candidateRule);
 				
-
 				// System.out.println("printing the grs's rules........");
 				// Grounding.checkGroundRuleStore(groundRuleStore);
 
@@ -122,6 +121,10 @@ public class BeamSearch extends Search{
 
 				if (currentGain > 0){
 					currentClauseGains.put(cc, currentGain);	
+				}
+
+				for(Rule r : model.getRules()){
+					System.out.println(r);
 				}
 				
 				// System.out.println("Current candidate rule:" + candidateRule);
