@@ -64,7 +64,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	 *
 	 * @see ConfigManager
 	 */
-	public static final String CONFIG_PREFIX = "topdownstructurelearning";
+	public static final String CONFIG_PREFIX = "structurelearning";
 	
 	
 	public static final String REASONER_KEY = CONFIG_PREFIX + ".reasoner";
@@ -73,7 +73,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	public static final String SCORING_KEY = CONFIG_PREFIX + ".scoring";
 	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clauseconstructor";
 
-	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".maxiter";
+	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".topdown.maxiter";
 	public static final int MAX_ITERATIONS_DEFAULT = 2;
 
 	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
@@ -134,8 +134,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			for (WeightedRule r : clauses){
 				model.addRule(r);
 			}
-
-			// Grounding.checkGroundRuleStore(groundRuleStore);
 
 			try{
 				mpll.learn();

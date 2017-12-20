@@ -101,7 +101,7 @@ public abstract class Search extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		clConstr = new ClauseConstructor(targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore, trainingMap);
+		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore, trainingMap);
 	}
 
 

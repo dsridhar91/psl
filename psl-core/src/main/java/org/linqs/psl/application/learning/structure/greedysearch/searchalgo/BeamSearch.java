@@ -49,8 +49,9 @@ public class BeamSearch extends Search{
 	 */
 	private static final Logger log = LoggerFactory.getLogger(BeamSearch.class);
 
-	public static final String CONFIG_PREFIX = "beamsearch";
-	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsize";
+	public static final String CONFIG_PREFIX = "structurelearning";
+
+	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsearch.beamsize";
 	public static final int BEAM_SIZE_DEFAULT = 10;
 
 	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
@@ -98,7 +99,8 @@ public class BeamSearch extends Search{
 			while(clConstr.hasNext()) {
 				WeightedRule candidateRule = clConstr.next();
 
-				// WeightedRule candidateRule = new WeightedLogicalRule(cc, initRuleWeight, useSquaredPotentials);
+				log.info("Current candidate rule:" + candidateRule);
+
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
 				double currentModelScore = -100.00;
 
@@ -116,30 +118,15 @@ public class BeamSearch extends Search{
 
 				double currentGain = currentModelScore - startingScore;
 
-
 				if (currentGain > 0){
 					Formula currentFormula = ((WeightedLogicalRule)candidateRule).getFormula();
 					currentClauseGains.put(currentFormula, currentGain);	
 				}
 
-				for(Rule r : model.getRules()){
-					System.out.println(r);
-				}
-				
-				System.out.println("Current candidate rule:" + candidateRule);
 				model.removeRule(candidateRule);
 				this.resetRuleWeights(currentModelWeightsMap);
 
-				System.out.println("Before ground rule store rule removal: " + groundRuleStore.size());
-				((MemoryGroundRuleStore)groundRuleStore).testPrint();
-
-				System.out.println(((MemoryGroundRuleStore)groundRuleStore).containsRule(candidateRule));
 				Grounding.removeRule(candidateRule, groundRuleStore);
-
-				
-
-				System.out.println("After ground rule store rule removal: " + groundRuleStore.size());
-				((MemoryGroundRuleStore)groundRuleStore).testPrint();
 			}
 
 			if(currentClauseGains.size() == 0){
@@ -160,10 +147,6 @@ public class BeamSearch extends Search{
 				bestGain = currentBeamBestGain;
 				log.warn("Best Clause:" + bestClause);
 				log.warn("Best Gain:" + bestGain);
-
-				// System.out.println("Best Clause:" + bestClause);
-				// System.out.println("Best Gain:" + bestGain);
-
 			}
 			previousBestGain = bestGain;
 
@@ -194,8 +177,10 @@ public class BeamSearch extends Search{
 
 	    List<Formula> rankedResults = new ArrayList<Formula>();
 
-	    int k = Math.min(list.size(), beamSize) - 1;
-	    for(int i = k; i >= 0; i--){
+	    int startIndex = list.size() - 1;
+	    int endIndex = Math.max(list.size() - beamSize, 0);
+
+	    for(int i = startIndex; i >= endIndex; i--){
 	    	rankedResults.add(list.get(i).getKey());
 	    }
 	    return rankedResults;

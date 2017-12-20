@@ -75,18 +75,6 @@ public class Grounding {
 
 		((MemoryGroundRuleStore)grs).removeRule(rule);
 
-		// System.out.println(((MemoryGroundRuleStore)grs).containsRule(rule) + "; " + rule);
-
-		// List<GroundRule> groundRules = new ArrayList<GroundRule>();
-		// for(GroundRule gr : grs.getGroundRules(rule)){
-		// 	groundRules.add(gr);
-		// }
-
-		// for(GroundRule gr: groundRules){
-		// 	grs.removeGroundRule(gr);
-		// }
-
-		
 	}
 
 	/**
@@ -105,14 +93,6 @@ public class Grounding {
 		for(GroundRule gr : grs.getGroundRules(rule)){
 			numGroundings++;
 		}
-
-		// System.out.println(rule);
-
-		// for(GroundRule gr : grs.getGroundRules(rule)){
-		// 	System.out.println(gr.getRule());
-		// }
-
-		// System.out.println("\n\n\n");
 		
 		return numGroundings;
 	}

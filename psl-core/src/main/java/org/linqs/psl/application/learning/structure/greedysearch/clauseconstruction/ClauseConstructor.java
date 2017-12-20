@@ -74,7 +74,23 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ClauseConstructor implements Iterator<WeightedRule> {
+
+	private static final Logger log = LoggerFactory.getLogger(ClauseConstructor.class);
+
+	public static final String CONFIG_PREFIX = "structurelearning";
+
+	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
+	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
+
+	public static final String SQUARED_POTENTIALS_KEY = CONFIG_PREFIX + ".squared";
+	public static final boolean SQUARED_POTENTIALS_DEFAULT = true;
+
+	protected double initRuleWeight;	
+	protected boolean useSquaredPotentials;
 
 	private Set<Predicate> targetPredicates;
 	private Set<Predicate> observedPredicates;
@@ -85,8 +101,11 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	private List<Formula> candidateClauses;
 	private WeightedRule nextClause;
 
+	protected ConfigBundle config;
 
-	public ClauseConstructor(Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
+
+	public ClauseConstructor(ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
+		this.config = config;
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
 		this.predicateTypeMap = predicateTypeMap;
@@ -95,6 +114,10 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		this.candidateClauses = null;
 		this.nextClause = null;
+
+		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
+		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
+
 	}
 
 	private Set<Term> getClauseVariables(Formula c, int arity) {
@@ -153,7 +176,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		//Remove clauses where a variable does not occur in any non-negated predicate
 		WeightedRule rule = null;
 		try {
-			rule = new WeightedLogicalRule(c, 1.0, true);
+			rule = new WeightedLogicalRule(c, initRuleWeight, useSquaredPotentials);
 		}
 		catch (IllegalArgumentException ex){
 			return null;
@@ -182,17 +205,6 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
 		if(numGroundings == 0) {
-			// System.out.println("REMOVING DEAD RULE FROM CC!!!");
-
-			// ((MemoryGroundRuleStore)groundRuleStore).testPrint();
-			
-			// System.out.println(rule);			
-			// Grounding.removeRule(rule, groundRuleStore);
-
-			// System.out.println("AFTER REMOVAL Of DEAD RULE FROM CC!!!");
-
-
-			// ((MemoryGroundRuleStore)groundRuleStore).testPrint();
 			
 			return null;
 		}
