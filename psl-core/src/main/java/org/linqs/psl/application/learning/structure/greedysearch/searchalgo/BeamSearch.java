@@ -141,14 +141,15 @@ public class BeamSearch extends Search{
 			Formula currentBeamBestClause = topClauses.get(0);
 			double currentBeamBestGain = currentClauseGains.get(currentBeamBestClause);
 
+			previousBestGain = bestGain;
+
 			if (currentBeamBestGain > bestGain){
 				bestClause = currentBeamBestClause;
 				bestGain = currentBeamBestGain;
 				log.warn("Best Clause:" + bestClause);
 				log.warn("Best Gain:" + bestGain);
 			}
-			previousBestGain = bestGain;
-
+			
 			if(Math.abs(previousBestGain - bestGain) <= 0.1){
 				reachedStoppingCondition = true;
 			}
