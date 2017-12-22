@@ -192,11 +192,13 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 			for(int i = 0; i < vars.length; i++) {
 				Set<String> varTypes = predicateTypes.get(i);
 				if(varXtype.containsKey(vars[i])) {
-					varTypes.retainAll(varXtype.get(vars[i]));
-					if(varTypes.size() == 0) {
+					varXtype.get(vars[i]).retainAll(varTypes);
+					if(varXtype.get(vars[i]).size() == 0) {
 						return null;
 					}
-					varXtype.put(vars[i], varTypes);
+				}
+				else {
+					varXtype.put(vars[i], new HashSet<String>(varTypes));
 				}
 			}
 		}
