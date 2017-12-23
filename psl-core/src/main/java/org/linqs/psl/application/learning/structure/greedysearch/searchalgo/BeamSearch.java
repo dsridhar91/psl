@@ -86,7 +86,10 @@ public class BeamSearch extends Search{
 		Formula bestClause = null;
 		boolean reachedStoppingCondition = false;
 
-		
+		Set<Rule> modelRules = new HashSet<Rule>();
+		for(Rule r : model.getRules()){
+			modelRules.add(r);
+		}
 
 		Set<WeightedRule> bestRules = new HashSet<WeightedRule>();
 
@@ -103,6 +106,10 @@ public class BeamSearch extends Search{
 		
 			while(clConstr.hasNext()) {
 				WeightedRule candidateRule = clConstr.next();
+
+				if(modelRules.contains(candidateRule)){
+					continue;
+				}
 
 				log.warn("Current candidate rule:" + candidateRule);
 
