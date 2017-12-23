@@ -52,7 +52,10 @@ public class BeamSearch extends Search{
 	public static final String CONFIG_PREFIX = "structurelearning";
 
 	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsearch.beamsize";
-	public static final int BEAM_SIZE_DEFAULT = 10;
+	public static final int BEAM_SIZE_DEFAULT = 4;
+
+	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".beamsearch.maxiter";
+	public static final int MAX_ITERATIONS_DEFAULT = 3;
 
 	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
 	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
@@ -61,8 +64,8 @@ public class BeamSearch extends Search{
 	public static final boolean SQUARED_POTENTIALS_DEFAULT = true;
 
 	protected int beamSize;
+	protected int maxSearchIterations;
 	protected double initRuleWeight;
-	
 	protected boolean useSquaredPotentials;
 
 	public BeamSearch(Model model, Database rvDB, Database observedDB, ConfigBundle config, Set<Formula> unitClauses, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore) {
@@ -71,6 +74,7 @@ public class BeamSearch extends Search{
 		beamSize = config.getInt(BEAM_SIZE_KEY, BEAM_SIZE_DEFAULT);
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
 		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
+		maxSearchIterations = config.getInt(MAX_ITERATIONS_KEY,MAX_ITERATIONS_DEFAULT);
 
 	}
 
@@ -91,7 +95,8 @@ public class BeamSearch extends Search{
 			beam.add(c);
 		}
 
-		while(!reachedStoppingCondition){
+		int iteration = 0;
+		while((!reachedStoppingCondition) && (iteration < maxSearchIterations)){
 
 			clConstr.createCandidateClauses(beam);
 			Map<Formula,Double> currentClauseGains = new HashMap<Formula,Double>();
@@ -149,10 +154,10 @@ public class BeamSearch extends Search{
 				log.warn("Best Clause:" + bestClause);
 				log.warn("Best Gain:" + bestGain);
 			}
-			
 			if(Math.abs(previousBestGain - bestGain) <= 0.1){
 				reachedStoppingCondition = true;
 			}
+			iteration++;
 		}
 
 		if(bestClause != null){

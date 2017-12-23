@@ -74,7 +74,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	public static final String CLAUSE_CONSTRUCTOR_KEY = CONFIG_PREFIX + ".clauseconstructor";
 
 	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".topdown.maxiter";
-	public static final int MAX_ITERATIONS_DEFAULT = 2;
+	public static final int MAX_ITERATIONS_DEFAULT = 3;
 
 	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
 	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
