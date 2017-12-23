@@ -165,7 +165,7 @@ public class TestTopDownSL {
 		model = new Model();
 	}
 
-	@Test
+	// @Test
 	public void testTopDownSL() {
 		try {
 			Set<Predicate> targetPredicates = new HashSet<Predicate>();
