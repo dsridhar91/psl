@@ -132,6 +132,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 			for (WeightedRule r : clauses){
 				model.addRule(r);
+				log.warn("Adding rule to model: " + r);
 			}
 
 			try{
