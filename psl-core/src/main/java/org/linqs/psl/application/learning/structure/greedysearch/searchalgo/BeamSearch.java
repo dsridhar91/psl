@@ -52,10 +52,10 @@ public class BeamSearch extends Search{
 	public static final String CONFIG_PREFIX = "structurelearning";
 
 	public static final String BEAM_SIZE_KEY = CONFIG_PREFIX + ".beamsearch.beamsize";
-	public static final int BEAM_SIZE_DEFAULT = 4;
+	public static final int BEAM_SIZE_DEFAULT = 3;
 
 	public static final String MAX_ITERATIONS_KEY = CONFIG_PREFIX + ".beamsearch.maxiter";
-	public static final int MAX_ITERATIONS_DEFAULT = 3;
+	public static final int MAX_ITERATIONS_DEFAULT = 2;
 
 	public static final String INIT_RULE_WEIGHT_KEY = CONFIG_PREFIX + ".initweight";
 	public static final double INIT_RULE_WEIGHT_DEFAULT = 5.0;
