@@ -214,7 +214,14 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		//Remove clauses with zero groundings
 
-		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
+		int numGroundings = 0;
+		try{
+			numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);	
+		}
+		catch(IllegalArgumentException ex){
+			return null;
+		}
+
 		if(numGroundings == 0) {
 			zeroGroundingClauses.add(rule);
 			return null;
