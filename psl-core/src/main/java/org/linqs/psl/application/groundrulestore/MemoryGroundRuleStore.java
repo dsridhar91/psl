@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,76 +29,72 @@ import com.google.common.collect.Iterables;
 /**
  * A simple {@link GroundRuleStore} that just stores each {@link GroundRule}
  * in memory.
+ * addGroundRule() is thread-safe and will silently ignore already added rules.
+ * Other methods are not guaranteed safe.
  */
 public class MemoryGroundRuleStore implements GroundRuleStore {
-
 	protected SetValuedMap<Rule, GroundRule> groundRules;
-	
+
 	public MemoryGroundRuleStore() {
 		groundRules = new HashSetValuedHashMap<Rule, GroundRule>();
 	}
-
 
 	public Iterable<Rule> getRules() {
 		return groundRules.keySet();
 	}
 
-
 	public Boolean containsRule(Rule rule) {
 		return groundRules.containsKey(rule);
 	}
-	
+
 	@Override
-	public void addGroundRule(GroundRule groundRule) {
-		if (!groundRules.put(groundRule.getRule(), groundRule)) {
-			throw new IllegalArgumentException("GroundRule has already been added: " + groundRule);
-		}
+	public synchronized void addGroundRule(GroundRule groundRule) {
+		groundRules.put(groundRule.getRule(), groundRule);
 	}
-	
+
 	@Override
 	public boolean containsGroundRule(GroundRule groundRule) {
 		return groundRules.containsMapping(groundRule.getRule(), groundRule);
 	}
-	
+
 	@Override
 	public Iterable<WeightedGroundRule> getCompatibilityRules() {
 		return Iterables.filter(groundRules.values(), WeightedGroundRule.class);
 	}
-	
+
 	@Override
 	public Iterable<UnweightedGroundRule> getConstraintRules() {
 		return Iterables.filter(groundRules.values(), UnweightedGroundRule.class);
 	}
-	
+
 	@Override
 	public Iterable<GroundRule> getGroundRules() {
 		return groundRules.values();
 	}
-	
+
 	@Override
 	public Iterable<GroundRule> getGroundRules(Rule rule) {
 		return groundRules.get(rule);
 	}
-	
+
 	@Override
 	public void removeGroundRule(GroundRule groundRule) {
 		groundRules.removeMapping(groundRule.getRule(), groundRule);
 	}
 
-	public void removeRule(Rule rule) {
+	@Override
+	public void removeGroundRules(Rule rule) {
 		groundRules.remove(rule);
 	}
 
-	public void testPrint(){
-		for(Rule r : groundRules.keySet()){
-			System.out.println("Rule " + r + ": " + groundRules.get(r).size());
-		}
-	}
-
-	
 	@Override
 	public int size() {
 		return groundRules.size();
+	}
+
+	@Override
+	public int count(Rule rule) {
+		return groundRules.get(rule).size();
 	}
 
 	@Override

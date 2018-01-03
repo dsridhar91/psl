@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class Divide extends Coefficient {
 	}
 	
 	@Override
-	public double getValue(Map<SummationVariable, Set<Constant>> subs) {
+	public double getValue(Map<SummationVariable, Integer> subs) {
 		double lhs = c1.getValue(subs);
 		double rhs = c2.getValue(subs);
 

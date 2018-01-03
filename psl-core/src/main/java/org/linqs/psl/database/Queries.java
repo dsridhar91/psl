@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,28 @@ import java.util.List;
  */
 public class Queries {
 	/**
+	 * Count all GroundAtoms of a Predicate persisted in a Database.
+	 *
+	 * @param db the Database to query for GroundAtoms
+	 * @param predicate the Predicate of the GroundAtoms to return
+	 * @return the count of all GroundAtoms of predicate in db
+	 */
+	public static int countAllGroundAtoms(Database db, StandardPredicate predicate) {
+		return db.countAllGroundAtoms(predicate);
+	}
+
+	/**
+	 * Count all ground random variable atoms of a Predicate persisted in a Database.
+	 *
+	 * @param db the Database to query for GroundAtoms
+	 * @param predicate the Predicate of the GroundAtoms to return
+	 * @return the count of all ground random variable atoms of predicate in db
+	 */
+	public static int countAllGroundRandomVariableAtoms(Database db, StandardPredicate predicate) {
+		return db.countAllGroundRandomVariableAtoms(predicate);
+	}
+
+	/**
 	 * Returns all GroundAtoms of a Predicate persisted in a Database.
 	 *
 	 * @param db the Database to query for GroundAtoms
@@ -69,8 +91,7 @@ public class Queries {
 	}
 
 	/**
-	 * Constructs a {@link QueryAtom} from raw arguments using
-	 * {@link #convertArguments(Database, Predicate, Object...)}.
+	 * Constructs a {@link QueryAtom} from raw arguments using convertArguments().
 	 *
 	 * @param predicate  the Predicate of the QueryAtom
 	 * @param rawArgs  the arguments to the QueryAtom (after conversion)

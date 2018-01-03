@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
+import org.linqs.psl.database.atom.PersistedAtomManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.GroundAtom;
 import org.linqs.psl.model.atom.ObservedAtom;
-import org.linqs.psl.model.atom.PersistedAtomManager;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.reasoner.Reasoner;
 import org.linqs.psl.reasoner.ReasonerFactory;
@@ -65,18 +65,11 @@ public class MPEInference implements ModelApplication {
 	public static final String CONFIG_PREFIX = "mpeinference";
 
 	/**
-	 * Key for {@link Factory} or String property.
-	 * <p>
-	 * Should be set to a {@link ReasonerFactory} or the fully qualified
-	 * name of one. Will be used to instantiate a {@link Reasoner}.
+	 * The class to use for a reasoner.
+	 * Should be compatible with REASONER_KEY.
 	 */
 	public static final String REASONER_KEY = CONFIG_PREFIX + ".reasoner";
-	/**
-	 * Default value for REASONER_KEY.
-	 * <p>
-	 * Value is instance of {@link ADMMReasonerFactory}.
-	 */
-	public static final ReasonerFactory REASONER_DEFAULT = new ADMMReasonerFactory();
+	public static final String REASONER_DEFAULT = "org.linqs.psl.reasoner.admm.ADMMReasoner";
 
 	/**
 	 * The class to use for ground rule storage.
@@ -107,21 +100,26 @@ public class MPEInference implements ModelApplication {
 	protected GroundRuleStore groundRuleStore;
 	protected TermStore termStore;
 
-	public MPEInference(Model model, Database db, ConfigBundle config)
-			throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+	public MPEInference(Model model, Database db, ConfigBundle config) {
 		this.model = model;
 		this.db = db;
 		this.config = config;
 
-		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
-		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
-		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
-
 		initialize();
 	}
 
-	protected void initialize() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-		TermGenerator termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
+	protected void initialize() {
+		TermGenerator termGenerator = null;
+
+		try {
+			reasoner = (Reasoner)config.getNewObject(REASONER_KEY, REASONER_DEFAULT);
+			termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
+			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+			termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
+		} catch (Exception ex) {
+			// The caller couldn't handle these exception anyways, convert them to runtime ones.
+			throw new RuntimeException("Failed to prepare storage for inference.", ex);
+		}
 
 		log.debug("Creating persisted atom mannager.");
 		atomManager = new PersistedAtomManager(db);

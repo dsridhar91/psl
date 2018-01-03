@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.linqs.psl.application.util;
 
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
+import org.linqs.psl.database.atom.AtomManager;
 import org.linqs.psl.model.Model;
-import org.linqs.psl.model.atom.AtomManager;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.GroundRule;
 
@@ -69,50 +69,41 @@ public class Grounding {
 	}
 
 	/**
-	 * HACK{DHANYA}
+	 * HACK(DHANYA)
 	 */
 	public static void removeRule(Rule rule, GroundRuleStore grs) {
-
-		((MemoryGroundRuleStore)grs).removeRule(rule);
-
+		grs.removeGroundRules(rule);
 	}
 
 	/**
-	 * HACK{DHANYA}
+	 * HACK(DHANYA)
 	 * Calls {@link Rule#groundAll(AtomManager, GroundRuleStore)} only
 	 * for a specified rule.
 	 *
-	 * @param rule  the Rule to ground
-	 * @param atomManager  AtomManager to use for grounding
-	 * @param grs  GroundRuleStore to use for grounding
+	 * @param rule the Rule to ground
+	 * @param atomManager AtomManager to use for grounding
+	 * @param grs GroundRuleStore to use for grounding
 	 */
 	public static int groundRule(Rule rule, AtomManager atomManager, GroundRuleStore grs) {
-
 		rule.groundAll(atomManager, grs);
-		int numGroundings = 0;
-		for(GroundRule gr : grs.getGroundRules(rule)){
-			numGroundings++;
-		}
-		
-		return numGroundings;
+		return grs.count(rule);
 	}
 
+	/**
+	 * HACK(DHANYA)
+	 */
 	public static void checkGroundRuleStore(GroundRuleStore grs) {
-
-		Iterator<GroundRule> groundRuleItr = grs.getGroundRules().iterator();
-		while(groundRuleItr.hasNext()){
-			GroundRule gr = groundRuleItr.next();
-			System.out.println(gr);
+		for (GroundRule rule : grs.getGroundRules()) {
+			System.out.println(rule);
 		}
 	}
 
-	public static void checkRules(GroundRuleStore grs) {
-
-		Iterator<Rule> ruleItr = ((MemoryGroundRuleStore)grs).getRules().iterator();
-		while(ruleItr.hasNext()){
-			Rule r = ruleItr.next();
-			System.out.println(r);
+	/**
+	 * HACK(DHANYA)
+	 */
+	public static void checkRules(MemoryGroundRuleStore grs) {
+		for (Rule rule : grs.getRules()) {
+			System.out.println(rule);
 		}
 	}
-
 }

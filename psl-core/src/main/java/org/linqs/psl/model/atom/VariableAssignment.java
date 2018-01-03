@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,12 +51,13 @@ public class VariableAssignment extends HashMap<Variable, Constant> {
 		this(4);
 	}
 
-	/** This constructor is only used internally for cloning.
-	 * @param ass Assignment of cloned variable assignment
+	/**
+	 * This constructor is only used internally for cloning.
+	 * @param vars Assignment of cloned variable assignment
 	 */
-	private VariableAssignment(VariableAssignment ass) {
+	private VariableAssignment(VariableAssignment vars) {
 		this();
-		putAll(ass);
+		putAll(vars);
 	}
 
 	/**

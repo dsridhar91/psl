@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,16 +33,21 @@ import java.util.Set;
  * DeferredFunctionalUniqueID can be replaced with UniqueIntID or UniqueStringID.
  * After all variables in a rule are added, there should be no DeferredFunctionalUniqueID left.
  */
-public class VariableTypeMap extends HashMap<Variable,ConstantType> {
+public class VariableTypeMap extends HashMap<Variable, ConstantType> {
 	private static final long serialVersionUID = -6590175777602710989L;
+
+	public void addVariable(Variable var, ConstantType type) {
+		addVariable(var, type, false);
+	}
 
 	/**
 	 * Adds a variable-type pair to the hashmap.
 	 *
 	 * @param var A variable
 	 * @param type An argument type
+	 * @param force ignore any consistency checks. This is not suggested.
 	 */
-	public void addVariable(Variable var, ConstantType type) {
+	public void addVariable(Variable var, ConstantType type, boolean force) {
 		ConstantType oldType = get(var);
 		if (oldType == null) {
 			put(var, type);
@@ -51,6 +56,11 @@ public class VariableTypeMap extends HashMap<Variable,ConstantType> {
 
 		// No need to do anything on a type match.
 		if (oldType == type) {
+			return;
+		}
+
+		if (force) {
+			put(var, type);
 			return;
 		}
 
@@ -120,7 +130,7 @@ public class VariableTypeMap extends HashMap<Variable,ConstantType> {
 	 */
 	public void addAll(VariableTypeMap other) {
 		for (Map.Entry<Variable, ConstantType> entry : other.entrySet()) {
-			addVariable(entry.getKey(),entry.getValue());
+			addVariable(entry.getKey(), entry.getValue());
 		}
 	}
 }

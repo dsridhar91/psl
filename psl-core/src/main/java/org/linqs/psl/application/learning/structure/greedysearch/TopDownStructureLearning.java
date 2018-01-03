@@ -1,9 +1,25 @@
+/*
+ * This file is part of the PSL software.
+ * Copyright 2011-2015 University of Maryland
+ * Copyright 2013-2018 The Regents of the University of California
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.linqs.psl.application.learning.structure.greedysearch;
 
 import org.linqs.psl.application.learning.structure.StructureLearningApplication;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.config.ConfigBundle;
-import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.database.Database;
@@ -30,10 +46,11 @@ import org.linqs.psl.reasoner.ReasonerFactory;
 import org.linqs.psl.reasoner.admm.ADMMReasonerFactory;
 import org.linqs.psl.reasoner.term.TermGenerator;
 import org.linqs.psl.reasoner.term.TermStore;
-import org.linqs.psl.application.learning.weight.TrainingMap;
-
+import org.linqs.psl.database.atom.TrainingMapAtomManager;
 
 import com.google.common.collect.Iterables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,10 +60,6 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Observable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 /**
  * Abstract class for learning the structure of
  * {@link WeightedRule CompatibilityRules} in a {@link Model}
@@ -54,19 +67,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author Golnoosh Farnadi <gfarnadi@ucsc.edu>
  */
-
-
 public class TopDownStructureLearning  extends StructureLearningApplication {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(TopDownStructureLearning.class);
 	/**
 	 * Prefix of property keys used by this class.
-	 *
-	 * @see ConfigManager
 	 */
 	public static final String CONFIG_PREFIX = "structurelearning";
-	
-	
+
+
 	public static final String REASONER_KEY = CONFIG_PREFIX + ".reasoner";
 	public static final String WEIGHT_LEARNING_KEY = CONFIG_PREFIX + ".weightlearning";
 	public static final String SEARCH_ALGO_KEY = CONFIG_PREFIX + ".searchalgo";
@@ -92,13 +101,10 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 		maxIterations = config.getInteger(MAX_ITERATIONS_KEY, MAX_ITERATIONS_DEFAULT);
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
 		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
-
-
 	}
-	
+
 	@Override
 	protected void doStructureLearn() {
-
 		Set<Formula> unitClauses = getUnitClauses(true);
 
 		MaxPseudoLikelihood mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
@@ -136,13 +142,13 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 			try{
 				mpll.learn();
-				initScore = scorer.scoreModel();	
+				initScore = scorer.scoreModel();
 			}
 			catch(Exception ex){
 				System.out.println(ex);
 				ex.printStackTrace();
 			}
-			
+
 			iter++;
 		}
 
@@ -152,7 +158,6 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	}
 
 	private Set<Formula> getUnitClauses(boolean getPositiveClauses){
-
 		Set<Formula> unitClauses = new HashSet<Formula>();
 
 		for (Predicate p : targetPredicates){
@@ -166,11 +171,10 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			unitClauses.add(new Negation(unitClause));
 
 			if(getPositiveClauses){
-				unitClauses.add(unitClause);	
+				unitClauses.add(unitClause);
 			}
 		}
 
 		return unitClauses;
 	}
-	
 }

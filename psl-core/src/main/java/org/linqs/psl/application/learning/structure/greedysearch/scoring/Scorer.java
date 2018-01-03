@@ -1,14 +1,25 @@
+/*
+ * This file is part of the PSL software.
+ * Copyright 2011-2015 University of Maryland
+ * Copyright 2013-2018 The Regents of the University of California
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.linqs.psl.application.learning.structure.greedysearch.scoring;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Observable;
 
 import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
-import org.linqs.psl.application.learning.weight.TrainingMap;
+import org.linqs.psl.database.atom.TrainingMapAtomManager;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
@@ -28,17 +39,20 @@ import org.linqs.psl.reasoner.term.TermStore;
 
 import com.google.common.collect.Iterables;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Set;
 
-public abstract class Scorer extends Observable implements ModelApplication
-{
-
+public abstract class Scorer extends Observable implements ModelApplication {
 	/**
 	 * Prefix of property keys used by this class.
-	 * 
+	 *
 	 * @see ConfigManager
 	 */
 	public static final String CONFIG_PREFIX = "scoring";
-	
+
 	/**
 	 * Key for {@link Factory} or String property.
 	 * <p>
@@ -60,7 +74,8 @@ public abstract class Scorer extends Observable implements ModelApplication
 	 * The class to use for ground rule storage.
 	 */
 	public static final String GROUND_RULE_STORE_KEY = CONFIG_PREFIX + ".groundrulestore";
-	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore";
+   // ConstraintBlockers require AtomRegisterGroundRuleStore.
+	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.AtomRegisterGroundRuleStore";
 
 	/**
 	 * The class to use for term storage.
@@ -75,14 +90,14 @@ public abstract class Scorer extends Observable implements ModelApplication
 	 */
 	public static final String TERM_GENERATOR_KEY = CONFIG_PREFIX + ".termgenerator";
 	public static final String TERM_GENERATOR_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermGenerator";
-	
+
 	protected Model model;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
-	
+
 	protected final List<WeightedRule> kernels;
 	protected final List<WeightedRule> immutableKernels;
-	protected TrainingMap trainingMap;
+	protected TrainingMapAtomManager trainingMap;
 
 	protected Reasoner reasoner;
 	protected GroundRuleStore groundRuleStore;
@@ -90,7 +105,6 @@ public abstract class Scorer extends Observable implements ModelApplication
 	protected TermGenerator termGenerator;
 
 	protected boolean passedGroundRuleStore;
-	
 
 	public Scorer(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
 		this.model = model;
@@ -118,7 +132,7 @@ public abstract class Scorer extends Observable implements ModelApplication
 		immutableKernels = new ArrayList<WeightedRule>();
 	}
 
-	public double scoreModel() 
+	public double scoreModel()
 		throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		/* Gathers the CompatibilityKernels */
 		for (WeightedRule k : Iterables.filter(model.getRules(), WeightedRule.class))
@@ -126,18 +140,17 @@ public abstract class Scorer extends Observable implements ModelApplication
 				kernels.add(k);
 			else
 				immutableKernels.add(k);
-		
+
 		initGroundModel();
-		
+
 		/* Score the current model */
 		Double currentModelScore = doScoring();
-		
+
 		kernels.clear();
 		cleanUpGroundModel();
 
 		return currentModelScore;
 	}
-
 
 	protected abstract double doScoring();
 
@@ -148,10 +161,10 @@ public abstract class Scorer extends Observable implements ModelApplication
 		if(!passedGroundRuleStore){
 			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
 		}
-		
+
 		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
 
-		trainingMap = new TrainingMap(rvDB, observedDB);
+		trainingMap = new TrainingMapAtomManager(rvDB, observedDB);
 		if (trainingMap.getLatentVariables().size() > 0) {
 			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
 					"corresponding ObservedAtoms. Latent variables are not supported " +
@@ -160,15 +173,13 @@ public abstract class Scorer extends Observable implements ModelApplication
 		}
 
 		if(!passedGroundRuleStore){
-			Grounding.groundAll(model, trainingMap, groundRuleStore);	
+			Grounding.groundAll(model, trainingMap, groundRuleStore);
 		}
-		
+
 		setLabeledRandomVariables();
-		
+
 		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
-
-
 
 	protected void cleanUpGroundModel() {
 		trainingMap = null;
@@ -191,7 +202,7 @@ public abstract class Scorer extends Observable implements ModelApplication
 		rvDB = null;
 		config = null;
 	}
-	
+
 	/**
 	 * Sets RandomVariableAtoms with training labels to their observed values.
 	 */
@@ -200,6 +211,4 @@ public abstract class Scorer extends Observable implements ModelApplication
 			e.getKey().setValue(e.getValue().getValue());
 		}
 	}
-
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
 import org.linqs.psl.database.Database;
+import org.linqs.psl.database.atom.TrainingMapAtomManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
@@ -39,17 +40,11 @@ import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 
 /**
- * Abstract class for learning the weights of
- * {@link WeightedRule CompatibilityRules} in a {@link Model}
- * from data.
- *
- * @author Stephen Bach <bach@cs.umd.edu>
+ * Abstract class for learning the weights of weighted mutableRules from data for a model.
  */
-public abstract class WeightLearningApplication extends Observable implements ModelApplication {
-
+public abstract class WeightLearningApplication implements ModelApplication {
 	/**
 	 * Prefix of property keys used by this class.
 	 *
@@ -58,21 +53,10 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	public static final String CONFIG_PREFIX = "weightlearning";
 
 	/**
-	 * Key for {@link Factory} or String property.
-	 * <p>
-	 * Should be set to a {@link ReasonerFactory} or the fully qualified
-	 * name of one. Will be used to instantiate a {@link Reasoner}.
-	 * <p>
-	 * This reasoner will be used when constructing ground models for weight
-	 * learning, unless this behavior is overriden by a subclass.
+	 * The class to use for inference.
 	 */
 	public static final String REASONER_KEY = CONFIG_PREFIX + ".reasoner";
-	/**
-	 * Default value for REASONER_KEY.
-	 * <p>
-	 * Value is instance of {@link ADMMReasonerFactory}.
-	 */
-	public static final ReasonerFactory REASONER_DEFAULT = new ADMMReasonerFactory();
+	public static final String REASONER_DEFAULT = "org.linqs.psl.reasoner.admm.ADMMReasoner";
 
 	/**
 	 * The class to use for ground rule storage.
@@ -95,17 +79,19 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	public static final String TERM_GENERATOR_DEFAULT = "org.linqs.psl.reasoner.admm.term.ADMMTermGenerator";
 
 	protected Model model;
-	protected Database rvDB, observedDB;
+	protected Database rvDB;
+	protected Database observedDB;
 	protected ConfigBundle config;
 
-	protected final List<WeightedRule> rules;
-	protected final List<WeightedRule> immutableRules;
-	protected TrainingMap trainingMap;
+	protected List<WeightedRule> mutableRules;
+	protected List<WeightedRule> immutableRules;
+	protected TrainingMapAtomManager trainingMap;
 
 	/**
 	 * Indicates that the rule weights have been changed and should be updated before optimization.
 	 * This should always be checked before optimization.
 	 */
+	// TODO(eriq): This is suspect. Feels like an indication of a hack.
 	protected boolean changedRuleWeights;
 	protected boolean passedGroundRuleStore;
 
@@ -115,30 +101,23 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	protected TermGenerator termGenerator;
 
 	public WeightLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
-		this.model = model;
-		this.rvDB = rvDB;
-		this.observedDB = observedDB;
-		this.config = config;
-
-		changedRuleWeights = true;
-		passedGroundRuleStore = false;
-
-		rules = new ArrayList<WeightedRule>();
-		immutableRules = new ArrayList<WeightedRule>();
+		this(model, rvDB, observedDB, config, null);
 	}
-
 
 	public WeightLearningApplication(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
 		this.model = model;
 		this.rvDB = rvDB;
 		this.observedDB = observedDB;
 		this.config = config;
-		this.groundRuleStore = groundRuleStore;
 
-		changedRuleWeights = true;
-		passedGroundRuleStore = true;
+		if (groundRuleStore != null) {
+			this.groundRuleStore = groundRuleStore;
+			changedRuleWeights = true;
+			passedGroundRuleStore = true;
+		}
 
-		rules = new ArrayList<WeightedRule>();
+		// TODO(eriq): Why not fill these now? We have the model.
+		mutableRules = new ArrayList<WeightedRule>();
 		immutableRules = new ArrayList<WeightedRule>();
 	}
 
@@ -153,25 +132,24 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	 * in the observed Database, unless the subclass implementation supports latent
 	 * variables.
 	 */
-	public void learn()
-			throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-		/* Gathers the CompatibilityRules */
+	public void learn() {
+		// Gathers the CompatibilityRules.
 		for (WeightedRule rule : Iterables.filter(model.getRules(), WeightedRule.class)) {
 			if (rule.isWeightMutable()) {
-				rules.add(rule);
+				mutableRules.add(rule);
 			} else {
 				immutableRules.add(rule);
 			}
 		}
 
-		/* Sets up the ground model */
+		// Sets up the ground model.
 		initGroundModel();
 
-		/* Learns new weights */
+		// Learns new weights.
 		doLearn();
 
-		rules.clear();
-		cleanUpGroundModel();
+		// TODO(eriq): Why clear? And why not clear immutable?
+		mutableRules.clear();
 	}
 
 	protected abstract void doLearn();
@@ -180,31 +158,33 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 	 * Constructs a ground model using model and trainingMap, and stores the
 	 * resulting GroundRules in reasoner.
 	 */
-	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
+	protected void initGroundModel() {
+		reasoner = (Reasoner)config.getNewObject(REASONER_KEY, REASONER_DEFAULT);
 		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
 
 		if(!passedGroundRuleStore){
-			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);	
+			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
 		}
 
 		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
 
-		trainingMap = new TrainingMap(rvDB, observedDB);
+		trainingMap = new TrainingMapAtomManager(rvDB, observedDB);
 		if (trainingMap.getLatentVariables().size() > 0) {
 			throw new IllegalArgumentException("All RandomVariableAtoms must have " +
 					"corresponding ObservedAtoms. Latent variables are not supported " +
 					"by this WeightLearningApplication. " +
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
+
 		if(!passedGroundRuleStore){
-			Grounding.groundAll(model, trainingMap, groundRuleStore);	
+			Grounding.groundAll(model, trainingMap, groundRuleStore);
 		}
-		
+
 		termGenerator.generateTerms(groundRuleStore, termStore);
 	}
 
-	protected void cleanUpGroundModel() {
+	@Override
+	public void close() {
 		trainingMap = null;
 
 		termStore.close();
@@ -214,13 +194,10 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 			groundRuleStore.close();
 			groundRuleStore = null;
 		}
-		
+
 		reasoner.close();
 		reasoner = null;
-	}
 
-	@Override
-	public void close() {
 		model = null;
 		rvDB = null;
 		config = null;
@@ -234,5 +211,4 @@ public abstract class WeightLearningApplication extends Observable implements Mo
 			e.getKey().setValue(e.getValue().getValue());
 		}
 	}
-
 }

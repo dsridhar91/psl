@@ -1,7 +1,25 @@
+/*
+ * This file is part of the PSL software.
+ * Copyright 2011-2015 University of Maryland
+ * Copyright 2013-2018 The Regents of the University of California
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.linqs.psl;
 
 import org.linqs.psl.application.inference.MPEInference;
 import org.linqs.psl.config.ConfigBundle;
+import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.EmptyBundle;
 import org.linqs.psl.database.DataStore;
 import org.linqs.psl.database.Database;
@@ -40,6 +58,10 @@ public class TestModelFactory {
 	public static final String PARTITION_OBSERVATIONS = "observations";
 	public static final String PARTITION_TARGETS = "targets";
 	public static final String PARTITION_TRUTH = "truth";
+	// This class promises not to use this partition, so tests can guarantee it will be empty.
+	public static final String PARTITION_UNUSED = "unused";
+
+	public static final String CONFIG_PREFIX = "testmodel";
 
 	// Give each model a unique identifier.
 	private static int modelId = 0;
@@ -149,10 +171,10 @@ public class TestModelFactory {
 			)));
 		} else {
 			observations.put(predicates.get("Nice"), new ArrayList<PredicateData>(Arrays.asList(
-				new PredicateData(0.8, new Object[]{"Alice"}),
-				new PredicateData(0.6, new Object[]{"Bob"}),
-				new PredicateData(0.4, new Object[]{"Charlie"}),
-				new PredicateData(0.2, new Object[]{"Derek"}),
+				new PredicateData(0.9, new Object[]{"Alice"}),
+				new PredicateData(0.8, new Object[]{"Bob"}),
+				new PredicateData(0.7, new Object[]{"Charlie"}),
+				new PredicateData(0.6, new Object[]{"Derek"}),
 				new PredicateData(0.0, new Object[]{"Eugene"})
 			)));
 		}
@@ -217,12 +239,19 @@ public class TestModelFactory {
 			Map<String, StandardPredicate> predicates, List<Rule> rules,
 			Map<StandardPredicate, List<PredicateData>> observations, Map<StandardPredicate, List<PredicateData>> targets,
 			Map<StandardPredicate, List<PredicateData>> truths) {
-		ConfigBundle config = new EmptyBundle();
+		ConfigBundle config = null;
+		try {
+			config = ConfigManager.getManager().getBundle(CONFIG_PREFIX);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+
 		String identifier = String.format("%s-%03d", TestModelFactory.class.getName(), modelId);
 		DataStore dataStore = new RDBMSDataStore(new H2DatabaseDriver(
 				Type.Memory,
 				Paths.get(System.getProperty("java.io.tmpdir"), identifier).toString(),
 				true), config);
+
 		Model model = new Model();
 
 		// Predicates

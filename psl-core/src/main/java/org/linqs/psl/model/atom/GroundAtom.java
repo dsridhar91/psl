@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,16 +44,14 @@ public abstract class GroundAtom extends Atom {
 	protected final Database db;
 	protected double value;
 
-	protected SetMultimap<Rule, GroundRule> registeredGroundRules;
-
 	protected GroundAtom(Predicate p, Constant[] args, Database db, double value) {
 		super(p, args);
 		this.db = db;
 		this.value = value;
+	}
 
-		// Until a ground rule is registered, the empty ground rules set
-		// will be used / returned to indicate an empty set.
-		this.registeredGroundRules = null;
+	public Database getDatabase() {
+		return db;
 	}
 
 	@Override
@@ -62,78 +60,20 @@ public abstract class GroundAtom extends Atom {
 	}
 
 	/**
-	 * @return The truth value of this Atom
+	 * @return the truth value of this Atom
 	 */
 	public double getValue() {
 		return value;
 	}
 
-	abstract public AtomFunctionVariable getVariable();
+	public String toStringWithValue() {
+		return super.toString() + " = " + getValue();
+	}
+
+	public abstract AtomFunctionVariable getVariable();
 
 	public VariableTypeMap collectVariables(VariableTypeMap varMap) {
 		// No Variables in GroundAtoms.
 		return varMap;
-	}
-
-	/**
-	 * Registers a ground rule to receive update events.
-	 * <p>
-	 * Any GroundRule that is a function of this Atom should be registered.
-	 *
-	 * @param rule A ground rule
-	 * @return TRUE if successful; FALSE if rule was already registered
-	 */
-	public boolean registerGroundRule(GroundRule rule) {
-		if (registeredGroundRules == null) {
-			registeredGroundRules = HashMultimap.create();
-		}
-
-		return registeredGroundRules.put(rule.getRule(), rule);
-	}
-
-	/**
-	 * Unregisters a ground rule, so that it no longer receives update events.
-	 *
-	 * @param rule A ground rule
-	 * @return TRUE if successful; FALSE if rule was never registered
-	 */
-	public boolean unregisterGroundRule(GroundRule rule) {
-		if (registeredGroundRules == null)
-			return false;
-		return registeredGroundRules.remove(rule.getRule(), rule);
-	}
-
-	/**
-	 * Returns a set of all registered ground rules that match a given rule.
-	 *
-	 * @param rule A rule
-	 * @return A set of all registered ground rules that match rule
-	 */
-	public Set<GroundRule> getRegisteredGroundRules(Rule rule) {
-		if (registeredGroundRules == null)
-			return emptyGroundRules;
-		return registeredGroundRules.get(rule);
-	}
-
-	/**
-	 * Returns a set of all registered ground rules.
-	 *
-	 * @return A collection of all registered ground rules
-	 */
-	public Collection<GroundRule> getRegisteredGroundRules() {
-		if (registeredGroundRules == null)
-			return emptyGroundRules;
-		return registeredGroundRules.values();
-	}
-
-	/**
-	 * Returns the number of registered ground rules.
-	 *
-	 * @return The number of registered ground rules
-	 */
-	public int getNumRegisteredGroundRules() {
-		if (registeredGroundRules == null)
-			return 0;
-		return registeredGroundRules.size();
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,22 @@
 package org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction;
 
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
-import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.EmptyBundle;
 import org.linqs.psl.database.DataStore;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.database.Partition;
+import org.linqs.psl.database.atom.AtomManager;
 import org.linqs.psl.database.loading.Inserter;
 import org.linqs.psl.database.rdbms.RDBMSDataStore;
 import org.linqs.psl.database.rdbms.driver.H2DatabaseDriver;
 import org.linqs.psl.database.rdbms.driver.H2DatabaseDriver.Type;
 import org.linqs.psl.model.atom.Atom;
 import org.linqs.psl.model.atom.AtomCache;
-import org.linqs.psl.model.atom.AtomManager;
 import org.linqs.psl.model.atom.GroundAtom;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.QueryAtom;
-import org.linqs.psl.model.atom.SimpleAtomManager;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Disjunction;
 import org.linqs.psl.model.formula.Negation;
@@ -63,7 +61,9 @@ import org.linqs.psl.model.term.UniqueStringID;
 import org.linqs.psl.model.term.Variable;
 import org.linqs.psl.reasoner.function.FunctionComparator;
 
-import java.lang.Math;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,11 +74,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ClauseConstructor implements Iterator<WeightedRule> {
-
 	private static final Logger log = LoggerFactory.getLogger(ClauseConstructor.class);
 
 	public static final String CONFIG_PREFIX = "structurelearning";
@@ -89,7 +85,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	public static final String SQUARED_POTENTIALS_KEY = CONFIG_PREFIX + ".squared";
 	public static final boolean SQUARED_POTENTIALS_DEFAULT = true;
 
-	protected double initRuleWeight;	
+	protected double initRuleWeight;
 	protected boolean useSquaredPotentials;
 
 	private Set<Predicate> targetPredicates;
@@ -104,7 +100,6 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	private Set<WeightedRule> zeroGroundingClauses;
 
 	protected ConfigBundle config;
-
 
 	public ClauseConstructor(ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
 		this.config = config;
@@ -128,14 +123,14 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		Set<Term> vars = new HashSet<Term>();
 		Set<Atom> atoms = new HashSet<Atom>();
-		
+
 		atoms = c.getAtoms(atoms);
 		for(Atom a: atoms) {
 			for(Term v : a.getArguments()) {
 				vars.add(v);
 			}
 		}
-		
+
 		char ch = 'A';
 		for(int i = 0; i < arity - 1; i++) {
 			vars.add(new Variable(String.valueOf((char) (ch + i + vars.size()))));
@@ -150,7 +145,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		}
 
 		while(!this.candidateClauses.isEmpty()) {
-			int listIndex = candidateClauses.size() - 1; 
+			int listIndex = candidateClauses.size() - 1;
 			Formula c = candidateClauses.remove(listIndex);
 			nextClause = isValidClause(c);
 			if(nextClause != null) {
@@ -185,7 +180,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		catch (IllegalArgumentException ex){
 			return null;
 		}
-			
+
 		//Remove clauses that are type inconsistent
 		Map<Term, Set<String>> varXtype = new HashMap<Term, Set<String>>();
 		Set<Atom> atoms = new HashSet<Atom>();
@@ -216,7 +211,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		int numGroundings = 0;
 		try{
-			numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);	
+			numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
 		}
 		catch(IllegalArgumentException ex){
 			return null;
@@ -230,10 +225,8 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		return rule;
 
 	}
-					
 
 	public void createCandidateClauses(Set<Formula> initialClauses) {
-
 		candidateClauses = new ArrayList<Formula>();
 		for(Formula c: initialClauses) {
 			for(Predicate p : observedPredicates) {
@@ -254,20 +247,20 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 						}
 					}
 				}
-				
+
 				if (c instanceof Disjunction){
 					for(int i = 0; i < numRules; i++) {
-						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
-						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new QueryAtom(p, args[i])));					
+						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));
+						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new QueryAtom(p, args[i])));
 					}
 				}
 				else{
 					Disjunction newClause = null;
 					for(int i = 0; i < numRules; i++) {
 						newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
-						candidateClauses.add(newClause);	
+						candidateClauses.add(newClause);
 						newClause = new Disjunction(c, new QueryAtom(p, args[i]));
-						candidateClauses.add(newClause);	
+						candidateClauses.add(newClause);
 					}
 				}
 			}

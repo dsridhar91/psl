@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,27 +25,25 @@ import org.linqs.psl.model.rule.WeightedRule;
 import com.google.common.collect.Iterables;
 
 public class LatentObjectiveComputer extends HardEM {
-
 	public LatentObjectiveComputer(Model model, Database rvDB,
 			Database observedDB, ConfigBundle config) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		super(model, rvDB, observedDB, config);
 
-		/* Gathers the CompatibilityRules */
+		// Gathers the CompatibilityRules.
 		for (WeightedRule rule : Iterables.filter(model.getRules(), WeightedRule.class)) {
 			if (rule.isWeightMutable()) {
-				rules.add(rule);
+				mutableRules.add(rule);
 			} else {
 				immutableRules.add(rule);
-         }
-      }
-		
-		/* Sets up the ground model */
+			}
+		}
+
+		// Sets up the ground model.
 		initGroundModel();
 	}
-	
+
 	/**
 	 * Computes primal objective
-	 * @return
 	 */
 	public double getObjective() {
 		termGenerator.updateWeights(groundRuleStore, termStore);
@@ -54,5 +52,4 @@ public class LatentObjectiveComputer extends HardEM {
 		computeExpectedIncomp();
 		return computeRegularizer() + computeLoss();
 	}
-
 }

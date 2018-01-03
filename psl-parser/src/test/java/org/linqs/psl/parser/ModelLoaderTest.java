@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -849,5 +849,34 @@ public class ModelLoaderTest {
 				}
 			}
 		}
+	}
+
+	// Make sure that arithmetic rules properly differentiate between
+	// QueryAtoms and SummationAtoms.
+	@Test
+	public void testArithmeticSummationAtom() {
+		// QueryAtom
+		String input = "1.0: Double(A, B) <= 1.0 ^2";
+		List<Rule> rules = PSLTest.getRules(dataStore, input);
+
+		assertEquals(1, rules.size());
+		assertEquals(WeightedArithmeticRule.class, rules.get(0).getClass());
+
+		WeightedArithmeticRule rule = (WeightedArithmeticRule)rules.get(0);
+		List<SummationAtomOrAtom> atoms = rule.getExpression().getAtoms();
+		assertEquals(1, atoms.size());
+		assertEquals(QueryAtom.class, atoms.get(0).getClass());
+
+		// SummationAtom
+		input = "1.0: Double(+A, B) <= 1.0 ^2";
+		rules = PSLTest.getRules(dataStore, input);
+
+		assertEquals(1, rules.size());
+		assertEquals(WeightedArithmeticRule.class, rules.get(0).getClass());
+
+		rule = (WeightedArithmeticRule)rules.get(0);
+		atoms = rule.getExpression().getAtoms();
+		assertEquals(1, atoms.size());
+		assertEquals(SummationAtom.class, atoms.get(0).getClass());
 	}
 }

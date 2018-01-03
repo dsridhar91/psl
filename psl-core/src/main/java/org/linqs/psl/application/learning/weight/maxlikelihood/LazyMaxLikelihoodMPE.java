@@ -1,7 +1,7 @@
 /*
  * This file is part of the PSL software.
  * Copyright 2011-2015 University of Maryland
- * Copyright 2013-2017 The Regents of the University of California
+ * Copyright 2013-2018 The Regents of the University of California
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.database.Queries;
+import org.linqs.psl.database.atom.LazyAtomManager;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.atom.Atom;
-import org.linqs.psl.model.atom.AtomEventFramework;
 import org.linqs.psl.model.atom.GroundAtom;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
@@ -33,7 +33,7 @@ import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.misc.GroundValueConstraint;
-import org.linqs.psl.reasoner.ReasonerFactory;
+import org.linqs.psl.reasoner.Reasoner;
 import org.linqs.psl.reasoner.term.TermGenerator;
 import org.linqs.psl.reasoner.term.TermStore;
 
@@ -61,10 +61,9 @@ import java.util.Set;
  * @author Stephen Bach <bach@cs.umd.edu>
  */
 public class LazyMaxLikelihoodMPE extends VotedPerceptron {
+	private static final Logger log = LoggerFactory.getLogger(LazyMaxLikelihoodMPE.class);
 
-	private static final Logger log = LoggerFactory.getLogger(AtomEventFramework.class);
-
-	protected AtomEventFramework eventFramework;
+	private LazyAtomManager lazyAtomManager;
 
 	/**
 	 * Constructs a new weight learner.
@@ -76,93 +75,57 @@ public class LazyMaxLikelihoodMPE extends VotedPerceptron {
 	 */
 	public LazyMaxLikelihoodMPE(Model model, Database distributionDB, Database labelDB, ConfigBundle config) {
 		super(model, distributionDB, labelDB, config);
+
+		// VotedPerceptron will try to access the training map
+		// (which doesn't exist in this application) if this is true.
+		augmentLoss = false;
 	}
 
 	@Override
-	protected void initGroundModel()
-			throws ClassNotFoundException, IllegalAccessException, InstantiationException {
-		reasoner = ((ReasonerFactory) config.getFactory(REASONER_KEY, REASONER_DEFAULT)).getReasoner(config);
-		termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
-		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
-		termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
-
-		eventFramework = new AtomEventFramework(rvDB, config);
-
-		// Registers the Model's Rules with the AtomEventFramework.
-		for (Rule rule : model.getRules()) {
-			rule.registerForAtomEvents(eventFramework, groundRuleStore);
+	protected void initGroundModel() {
+		try {
+			reasoner = (Reasoner)config.getNewObject(REASONER_KEY, REASONER_DEFAULT);
+			termStore = (TermStore)config.getNewObject(TERM_STORE_KEY, TERM_STORE_DEFAULT);
+			groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+			termGenerator = (TermGenerator)config.getNewObject(TERM_GENERATOR_KEY, TERM_GENERATOR_DEFAULT);
+		} catch (Exception ex) {
+			// The caller couldn't handle these exception anyways, convert them to runtime ones.
+			throw new RuntimeException("Failed to prepare storage for inference.", ex);
 		}
 
-		/* Grounds the model */
-		Grounding.groundAll(model, eventFramework, groundRuleStore);
-		while (eventFramework.checkToActivate() > 0) {
-			eventFramework.workOffJobQueue();
-		}
+		lazyAtomManager = new LazyAtomManager(rvDB, config);
+
+		log.debug("Initial grounding.");
+		Grounding.groundAll(model, lazyAtomManager, groundRuleStore);
+
+		log.debug("Initializing objective terms for {} ground rules.", groundRuleStore.size());
+		termGenerator.generateTerms(groundRuleStore, termStore);
+		log.debug("Generated {} objective terms from {} ground rules.", termStore.size(), groundRuleStore.size());
 	}
 
 	@Override
 	protected double[] computeObservedIncomp() {
+		Map<RandomVariableAtom, GroundValueConstraint> targetMap = activateLabeledAtoms();
 
-		/*
-		 * In order to ground out the graphical model with the label truth values,
-		 * all labeled atoms with non-zero truth values are activated and constrained.
-		 *
-		 * Then, a loop is used to extend the network based on MPE inference and
-		 * activation events, and then check for new labeled RandomVariableAtoms
-		 * to constrain as necessary.
-		 */
+		boolean continueGrowing = false;
 
-		Map<RandomVariableAtom, GroundValueConstraint> targetMap = new HashMap<RandomVariableAtom, GroundValueConstraint>();
-
-		// Activates all non-zero labeled atoms.
-		for (StandardPredicate p : observedDB.getRegisteredPredicates()) {
-			for (GroundAtom labeledAtom : Queries.getAllAtoms(observedDB, p)) {
-				/*
-				 * Double checks that it is observed in observedDB and unobserved in rvDB,
-				 * since those are the only atoms in observedDB to be considered. Also,
-				 * checks if the labeled truth value is greater than 0.0, since activation
-				 * would be unnecessary until the corresponding atom in rvDB had a non-zero
-				 * truth value. If all three conditions are met, activates and constrains the atom.
-				 */
-				if (labeledAtom instanceof ObservedAtom && labeledAtom.getValue() > 0.0) {
-					GroundAtom correspondingAtom = eventFramework.getAtom(labeledAtom.getPredicate(), labeledAtom.getArguments());
-					if (correspondingAtom instanceof RandomVariableAtom) {
-						eventFramework.activateAtom((RandomVariableAtom) correspondingAtom);
-						GroundValueConstraint con = new GroundValueConstraint((RandomVariableAtom) correspondingAtom, ((ObservedAtom) labeledAtom).getValue());
-						targetMap.put((RandomVariableAtom) correspondingAtom, con);
-						groundRuleStore.addGroundRule(con);
-					}
-				}
-			}
-		}
-
-		boolean continueGrowing;
 		// Maintains a temporary set during collection to avoid concurrent modification errors.
 		Set<GroundValueConstraint> toAdd = new HashSet<GroundValueConstraint>();
 
+		// Use a loop to extend the network based on MPE inference and
+		// activation events, and then check for new labeled RandomVariableAtoms
+		// to constrain as necessary.
 		log.debug("Beginning to grow labeled network.");
 		do {
 			continueGrowing = false;
 
-			// Computes the MPE state and grows graphical model.
-			do {
-				eventFramework.workOffJobQueue();
-
-				if (changedRuleWeights) {
-					termGenerator.updateWeights(groundRuleStore, termStore);
-					changedRuleWeights = false;
-				}
-
-				// Computes the MPE state.
-				reasoner.optimize(termStore);
-			}
-			while (eventFramework.checkToActivate() > 0);
+			computeMPEState();
 
 			// Collects existing RandomVariableAtoms and pairs them with label constraints.
 			for (GroundRule groundRule : groundRuleStore.getGroundRules()) {
-				for (Atom a : groundRule.getAtoms()) {
-					if (a instanceof RandomVariableAtom) {
-						RandomVariableAtom rv = (RandomVariableAtom) a;
+				for (Atom atom : groundRule.getAtoms()) {
+					if (atom instanceof RandomVariableAtom) {
+						RandomVariableAtom rv = (RandomVariableAtom) atom;
 						if (!targetMap.containsKey(rv)) {
 							Atom possibleLabel = observedDB.getAtom(rv.getPredicate(), rv.getArguments());
 							if (possibleLabel instanceof ObservedAtom) {
@@ -181,15 +144,13 @@ public class LazyMaxLikelihoodMPE extends VotedPerceptron {
 				groundRuleStore.addGroundRule(con);
 			}
 			toAdd.clear();
-
-		}
-		while (continueGrowing);
+		} while (continueGrowing);
 		log.debug("Finished growing labeled network.");
 
 		// Computes the observed incompatibilities.
-		double[] truthIncompatibility = new double[rules.size()];
-		for (int i = 0; i < rules.size(); i++) {
-			for (GroundRule groundRule : groundRuleStore.getGroundRules(rules.get(i))) {
+		double[] truthIncompatibility = new double[mutableRules.size()];
+		for (int i = 0; i < mutableRules.size(); i++) {
+			for (GroundRule groundRule : groundRuleStore.getGroundRules(mutableRules.get(i))) {
 				truthIncompatibility[i] += ((WeightedGroundRule) groundRule).getIncompatibility();
 			}
 		}
@@ -204,25 +165,13 @@ public class LazyMaxLikelihoodMPE extends VotedPerceptron {
 
 	@Override
 	protected double[] computeExpectedIncomp() {
-		double[] expIncomp = new double[rules.size()];
+		double[] expIncomp = new double[mutableRules.size()];
 
-		// Computes the MPE state.
-		do {
-			eventFramework.workOffJobQueue();
-
-			if (changedRuleWeights) {
-				termGenerator.updateWeights(groundRuleStore, termStore);
-				changedRuleWeights = false;
-			}
-
-			// Computes the MPE state,
-			reasoner.optimize(termStore);
-		}
-		while (eventFramework.checkToActivate() > 0);
+		computeMPEState();
 
 		// Computes incompatibility.
-		for (int i = 0; i < rules.size(); i++) {
-			for (GroundRule groundRule : groundRuleStore.getGroundRules(rules.get(i))) {
+		for (int i = 0; i < mutableRules.size(); i++) {
+			for (GroundRule groundRule : groundRuleStore.getGroundRules(mutableRules.get(i))) {
 				expIncomp[i] += ((WeightedGroundRule) groundRule).getIncompatibility();
 			}
 		}
@@ -232,10 +181,10 @@ public class LazyMaxLikelihoodMPE extends VotedPerceptron {
 
 	@Override
 	protected double[] computeScalingFactor() {
-		double[] scalingFactor = new double[rules.size()];
+		double[] scalingFactor = new double[mutableRules.size()];
 
-		for (int i = 0; i < rules.size(); i++) {
-			for (GroundRule rule : groundRuleStore.getGroundRules(rules.get(i))) {
+		for (int i = 0; i < mutableRules.size(); i++) {
+			for (GroundRule rule : groundRuleStore.getGroundRules(mutableRules.get(i))) {
 				scalingFactor[i]++;
 			}
 
@@ -247,13 +196,70 @@ public class LazyMaxLikelihoodMPE extends VotedPerceptron {
 		return scalingFactor;
 	}
 
-	@Override
-	protected void cleanUpGroundModel() {
-		// Unregisters the Model's Rules with the AtomEventFramework.
-		for (Rule rule : model.getRules())
-			rule.unregisterForAtomEvents(eventFramework, groundRuleStore);
-		eventFramework = null;
+	// TODO(eriq): This really seems like it should have a max number of iterations like LazyMPEInference.
+	private void computeMPEState() {
+		int iteration = 1;
 
-		super.cleanUpGroundModel();
+		do {
+			// Activate any relevant lazy atoms.
+			int numActivated = lazyAtomManager.activateAtoms(model, groundRuleStore);
+			log.debug("Iteration {} -- Activated {} atoms.", iteration, numActivated);
+
+			if (changedRuleWeights) {
+				termGenerator.updateWeights(groundRuleStore, termStore);
+				changedRuleWeights = false;
+			}
+
+			if (numActivated > 0) {
+				// Regenerate optimization terms.
+				termStore.clear();
+
+				log.debug("Iteration {} -- Initializing objective terms for {} ground rules.",
+						iteration, groundRuleStore.size());
+				termGenerator.generateTerms(groundRuleStore, termStore);
+				log.debug("Iteration {} -- Generated {} objective terms from {} ground rules.",
+						iteration, termStore.size(), groundRuleStore.size());
+			}
+
+			log.debug("Iteration {} -- Begining inference.");
+			reasoner.optimize(termStore);
+			log.debug("Iteration {} -- Inference complete.");
+		} while (lazyAtomManager.countActivatableAtoms() > 0);
+	}
+
+	/**
+	 * In order to ground out the graphical model with the label truth values,
+	 * all labeled atoms with non-zero truth values are activated and constrained.
+	 */
+	private Map<RandomVariableAtom, GroundValueConstraint> activateLabeledAtoms() {
+		Map<RandomVariableAtom, GroundValueConstraint> targetMap = new HashMap<RandomVariableAtom, GroundValueConstraint>();
+
+		Set<RandomVariableAtom> toActivate = new HashSet<RandomVariableAtom>();
+
+		// Collect all non-zero labeled atoms to activate.
+		for (StandardPredicate predicate : observedDB.getRegisteredPredicates()) {
+			for (GroundAtom labeledAtom : Queries.getAllAtoms(observedDB, predicate)) {
+				// Double check that it is observed in observedDB and unobserved in rvDB,
+				// since those are the only atoms in observedDB to be considered.
+				// Also check if the labeled truth value is greater than 0.0,
+				// since activation would be unnecessary until the corresponding atom in rvDB had a non-zero
+				// truth value. If all three conditions are met, activate and constrain the atom.
+				if (labeledAtom instanceof ObservedAtom && labeledAtom.getValue() > 0.0) {
+					GroundAtom correspondingAtom = lazyAtomManager.getAtom(labeledAtom.getPredicate(), labeledAtom.getArguments());
+					if (correspondingAtom instanceof RandomVariableAtom) {
+						RandomVariableAtom rvAtom = (RandomVariableAtom)correspondingAtom;
+						toActivate.add(rvAtom);
+
+						GroundValueConstraint con = new GroundValueConstraint(rvAtom, ((ObservedAtom)labeledAtom).getValue());
+						targetMap.put(rvAtom, con);
+						groundRuleStore.addGroundRule(con);
+					}
+				}
+			}
+		}
+
+		lazyAtomManager.activateAtoms(toActivate, model, groundRuleStore);
+
+		return targetMap;
 	}
 }
