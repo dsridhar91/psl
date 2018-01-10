@@ -102,6 +102,8 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	private List<Formula> candidateClauses;
 	private WeightedRule nextClause;
 
+	private Set<WeightedRule> zeroGroundingClauses;
+
 	protected ConfigBundle config;
 
 
@@ -116,6 +118,8 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 		this.candidateClauses = null;
 		this.nextClause = null;
+
+		zeroGroundingClauses = new HashSet<WeightedRule>();
 
 		initRuleWeight = config.getDouble(INIT_RULE_WEIGHT_KEY, INIT_RULE_WEIGHT_DEFAULT);
 		useSquaredPotentials = config.getBoolean(SQUARED_POTENTIALS_KEY, SQUARED_POTENTIALS_DEFAULT);
@@ -212,11 +216,23 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 			}
 		}
 
+		// Check to see if rule already has zero groundings
+		if(zeroGroundingClauses.contains(rule)){
+			return null;
+		}
+
 		//Remove clauses with zero groundings
 
-		int numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);
+		int numGroundings = 0;
+		try{
+			numGroundings = Grounding.groundRule(rule, atomManager, groundRuleStore);	
+		}
+		catch(IllegalArgumentException ex){
+			return null;
+		}
+
 		if(numGroundings == 0) {
-			
+			zeroGroundingClauses.add(rule);
 			return null;
 		}
 
