@@ -94,6 +94,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 	private Set<Predicate> targetPredicates;
 	private Set<Predicate> observedPredicates;
+	private Predicate scopingPredicate;
 	protected Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap;
 	private GroundRuleStore groundRuleStore;
 	private AtomManager atomManager;
@@ -106,10 +107,11 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	protected ConfigBundle config;
 
 
-	public ClauseConstructor(ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
+	public ClauseConstructor(ConfigBundle config, Set<Predicate> targetPredicates, Set<Predicate> observedPredicates, Predicate scopingPredicate, Map<Predicate,Map<Integer,Set<String>>> predicateTypeMap, GroundRuleStore groundRuleStore, AtomManager atomManager) {
 		this.config = config;
 		this.targetPredicates = targetPredicates;
 		this.observedPredicates = observedPredicates;
+		this.scopingPredicate = scopingPredicate;
 		this.predicateTypeMap = predicateTypeMap;
 		this.groundRuleStore = groundRuleStore;
 		this.atomManager = atomManager;
@@ -177,14 +179,6 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 
 	private WeightedRule isValidClause(Formula c) {
 
-		//Remove clauses where a variable does not occur in any non-negated predicate
-		WeightedRule rule = null;
-		try {
-			rule = new WeightedLogicalRule(c, initRuleWeight, useSquaredPotentials);
-		}
-		catch (IllegalArgumentException ex){
-			return null;
-		}
 			
 		//Remove clauses that are type inconsistent
 		Map<Term, Set<String>> varXtype = new HashMap<Term, Set<String>>();
@@ -207,6 +201,29 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 			}
 		}
 
+
+		//Remove clauses where a variable does not occur in any non-negated predicate
+		WeightedRule rule = null;
+		try {
+			rule = new WeightedLogicalRule(c, initRuleWeight, useSquaredPotentials);
+		}
+		catch (IllegalArgumentException ex){
+			String[] variables = ex.toString().split("\\[")[1].split("\\]")[0].replace(" ","").split(",");
+			int numVariables = variables.length;
+			Term[] terms = new Term[numVariables];
+			for(int i = 0; i < numVariables; i++) {
+				terms[i] = new Variable(variables[i]);
+			}
+			Formula[] scopingPredicates = new Formula[numVariables+1];
+			scopingPredicates[numVariables] = c;
+			for(int i = 0; i < numVariables; i++) {
+				scopingPredicates[i] = new Negation(new QueryAtom(scopingPredicate, terms[i]));
+			}
+
+			Disjunction newClause = new Disjunction(scopingPredicates);
+			rule = new WeightedLogicalRule(newClause, initRuleWeight, useSquaredPotentials);
+		}
+		
 		// Check to see if rule already has zero groundings
 		if(zeroGroundingClauses.contains(rule)){
 			return null;
@@ -226,11 +243,20 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 			zeroGroundingClauses.add(rule);
 			return null;
 		}
-
 		return rule;
 
 	}
 					
+	private void lexsortvariable(Disjunction c) {
+		Map<Term,Term> varMap = new HashMap<Term, Term>();
+
+		int len = c.length(); 
+		for(int i = 0; i < len; i++) {
+			Formula p = c.get(i);
+			System.out.println(p);
+		}
+	       	
+	}
 
 	public void createCandidateClauses(Set<Formula> initialClauses) {
 
@@ -265,6 +291,7 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 					Disjunction newClause = null;
 					for(int i = 0; i < numRules; i++) {
 						newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
+						//lexsortvariable(newClause);
 						candidateClauses.add(newClause);	
 						newClause = new Disjunction(c, new QueryAtom(p, args[i]));
 						candidateClauses.add(newClause);	

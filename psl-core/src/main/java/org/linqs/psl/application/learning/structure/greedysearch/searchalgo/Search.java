@@ -18,6 +18,7 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.PredicateFactory;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.weight.Weight;
@@ -105,7 +106,9 @@ public abstract class Search extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore, trainingMap);
+		PredicateFactory pf = PredicateFactory.getFactory();
+		Predicate scopingPredicate = pf.getPredicate("Constants");
+		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, scopingPredicate, predicateTypeMap, groundRuleStore, trainingMap);
 	}
 
 

@@ -91,6 +91,7 @@ public class TestTopDownSL {
 	private StandardPredicate singlePredicate;
 	private StandardPredicate doublePredicateObs;
 	private StandardPredicate doublePredicateTar;
+	private StandardPredicate constantPredicate;
 
 	private Set<StandardPredicate> rvClose;
 	private Set<StandardPredicate> truthClose;
@@ -104,6 +105,9 @@ public class TestTopDownSL {
 
 		// Predicates
 		PredicateFactory factory = PredicateFactory.getFactory();
+
+		constantPredicate = factory.createStandardPredicate("Constants", ConstantType.UniqueStringID);
+		dataStore.registerPredicate(constantPredicate);
 
 		singlePredicate = factory.createStandardPredicate("SinglePredicate", ConstantType.UniqueStringID);
 		dataStore.registerPredicate(singlePredicate);
@@ -130,7 +134,11 @@ public class TestTopDownSL {
 		obsPartition = dataStore.getPartition("obs");
 		targetPartition = dataStore.getPartition("target");
 
-		Inserter inserter = dataStore.getInserter(singlePredicate, obsPartition);
+		Inserter inserter = dataStore.getInserter(constantPredicate, obsPartition);
+		inserter.insert(new UniqueStringID("Alice"));
+		inserter.insert(new UniqueStringID("Bob"));
+
+		inserter = dataStore.getInserter(singlePredicate, obsPartition);
 		inserter.insert(new UniqueStringID("Alice"));
 		inserter.insert(new UniqueStringID("Bob"));
 
