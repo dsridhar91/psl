@@ -24,6 +24,8 @@ import org.linqs.psl.database.Database;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
+import org.linqs.psl.application.groundrulestore.GroundRuleStore;
+
 
 /**
  * Learns weights by optimizing the log likelihood of the data using
@@ -40,6 +42,10 @@ public class MaxLikelihoodMPE extends VotedPerceptron {
 
 	public MaxLikelihoodMPE(Model model, Database rvDB, Database observedDB, ConfigBundle config) {
 		super(model, rvDB, observedDB, config);
+	}
+
+	public MaxLikelihoodMPE(Model model, Database rvDB, Database observedDB, ConfigBundle config, GroundRuleStore groundRuleStore) {
+		super(model, rvDB, observedDB, config, groundRuleStore);
 	}
 
 	@Override

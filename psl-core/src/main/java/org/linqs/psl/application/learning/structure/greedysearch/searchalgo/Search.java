@@ -4,6 +4,8 @@ import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
+import org.linqs.psl.application.learning.weight.maxlikelihood.ConstraintFreeMPLE;
+import org.linqs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
@@ -58,7 +60,9 @@ public abstract class Search extends Observable implements ModelApplication
 	protected ConfigBundle config;
 	
 	protected ClauseConstructor clConstr;
-	protected MaxPseudoLikelihood mpll;
+	// protected MaxPseudoLikelihood mpll;
+	protected ConstraintFreeMPLE mpll;
+	// protected MaxLikelihoodMPE mpll;
 	protected WeightedPseudoLogLikelihood wpll;
 	
 	protected Set<Formula> unitClauses;
@@ -77,7 +81,7 @@ public abstract class Search extends Observable implements ModelApplication
 		this.predicateTypeMap = predicateTypeMap;
 		this.groundRuleStore = groundRuleStore;
 
-		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+		mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 	}
