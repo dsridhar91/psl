@@ -22,6 +22,8 @@ import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
+import org.linqs.psl.application.learning.weight.maxlikelihood.ConstraintFreeMPLE;
+import org.linqs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
@@ -101,7 +103,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 		Set<Formula> unitClauses = getUnitClauses(true);
 
-		MaxPseudoLikelihood mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+		ConstraintFreeMPLE mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
 		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 

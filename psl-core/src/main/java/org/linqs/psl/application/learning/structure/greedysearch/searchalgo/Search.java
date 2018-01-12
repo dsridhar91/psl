@@ -4,6 +4,8 @@ import org.linqs.psl.application.ModelApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.clauseconstruction.ClauseConstructor;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikelihood;
+import org.linqs.psl.application.learning.weight.maxlikelihood.ConstraintFreeMPLE;
+import org.linqs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.config.Factory;
@@ -16,6 +18,7 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.model.rule.WeightedRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.PredicateFactory;
 import org.linqs.psl.model.formula.Conjunction;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.weight.Weight;
@@ -58,7 +61,9 @@ public abstract class Search extends Observable implements ModelApplication
 	protected ConfigBundle config;
 	
 	protected ClauseConstructor clConstr;
-	protected MaxPseudoLikelihood mpll;
+	// protected MaxPseudoLikelihood mpll;
+	protected ConstraintFreeMPLE mpll;
+	// protected MaxLikelihoodMPE mpll;
 	protected WeightedPseudoLogLikelihood wpll;
 	
 	protected Set<Formula> unitClauses;
@@ -77,7 +82,7 @@ public abstract class Search extends Observable implements ModelApplication
 		this.predicateTypeMap = predicateTypeMap;
 		this.groundRuleStore = groundRuleStore;
 
-		mpll = new MaxPseudoLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+		mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 	}
@@ -101,7 +106,9 @@ public abstract class Search extends Observable implements ModelApplication
 					"Example latent variable: " + trainingMap.getLatentVariables().iterator().next());
 		}
 
-		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore, trainingMap);
+		PredicateFactory pf = PredicateFactory.getFactory();
+		Predicate scopingPredicate = pf.getPredicate("constants");
+		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, scopingPredicate, predicateTypeMap, groundRuleStore, trainingMap);
 	}
 
 
