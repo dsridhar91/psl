@@ -106,7 +106,7 @@ public class TestTopDownSL {
 		// Predicates
 		PredicateFactory factory = PredicateFactory.getFactory();
 
-		constantPredicate = factory.createStandardPredicate("Constants", ConstantType.UniqueStringID);
+		constantPredicate = factory.createStandardPredicate("constants", ConstantType.UniqueStringID);
 		dataStore.registerPredicate(constantPredicate);
 
 		singlePredicate = factory.createStandardPredicate("SinglePredicate", ConstantType.UniqueStringID);
