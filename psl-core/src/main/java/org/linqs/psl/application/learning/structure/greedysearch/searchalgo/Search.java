@@ -107,7 +107,7 @@ public abstract class Search extends Observable implements ModelApplication
 		}
 
 		PredicateFactory pf = PredicateFactory.getFactory();
-		Predicate scopingPredicate = pf.getPredicate("Constants");
+		Predicate scopingPredicate = pf.getPredicate("constants");
 		clConstr = new ClauseConstructor(config, targetPredicates, observedPredicates, scopingPredicate, predicateTypeMap, groundRuleStore, trainingMap);
 	}
 

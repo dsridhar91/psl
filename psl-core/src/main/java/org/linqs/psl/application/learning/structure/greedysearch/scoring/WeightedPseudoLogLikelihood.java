@@ -149,6 +149,13 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		// double struct_norm = -1 * this.num_predicates() * this.l1Regulariztion;
 		double pll = -1 * (numRV * incomp + marginalProduct); // + l2_norm + struct_norm;
 
+
+		for(Rule r: model.getRules()){
+			for(GroundRule gr : groundRuleStore.getGroundRules(r)){
+				System.out.println(gr);
+			}
+		}
+
 		log.debug(model.toString());
 		log.debug("Score: " + pll);
 
