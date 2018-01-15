@@ -68,8 +68,10 @@ public abstract class StructureLearningApplication extends Observable implements
 	public static final String GROUND_RULE_STORE_KEY = CONFIG_PREFIX + ".groundrulestore";
 	public static final String GROUND_RULE_STORE_DEFAULT = "org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore";
 
+	public static final String DO_LEARNING_KEY = CONFIG_PREFIX + ".dolearning";	
+	public static final boolean DO_LEARNING_DEFAULT = true;
 	
-	
+	protected boolean doLearning;
 	protected Model model;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
@@ -97,6 +99,7 @@ public abstract class StructureLearningApplication extends Observable implements
 		kernels = new ArrayList<WeightedRule>();
 		immutableKernels = new ArrayList<WeightedRule>();
 		groundRuleStore = (GroundRuleStore)config.getNewObject(GROUND_RULE_STORE_KEY, GROUND_RULE_STORE_DEFAULT);
+		doLearning = config.getBoolean(DO_LEARNING_KEY, DO_LEARNING_DEFAULT);
 
 	}
 	

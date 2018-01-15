@@ -52,13 +52,18 @@ public abstract class Search extends Observable implements ModelApplication
 	 * 
 	 * @see ConfigManager
 	 */
-	public static final String CONFIG_PREFIX = "search";
+	public static final String CONFIG_PREFIX = "structurelearning";
 
+	public static final String DO_LEARNING_KEY = CONFIG_PREFIX + ".dolearning";	
+	public static final boolean DO_LEARNING_DEFAULT = true;
+	
 	protected Model model;
 	protected TrainingMap trainingMap;
 	protected GroundRuleStore groundRuleStore;
 	protected Database rvDB, observedDB;
 	protected ConfigBundle config;
+
+	protected boolean doLearning;
 	
 	protected ClauseConstructor clConstr;
 	// protected MaxPseudoLikelihood mpll;
@@ -84,6 +89,8 @@ public abstract class Search extends Observable implements ModelApplication
 
 		mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
+
+		doLearning = config.getBoolean(DO_LEARNING_KEY, DO_LEARNING_DEFAULT);
 
 	}
 

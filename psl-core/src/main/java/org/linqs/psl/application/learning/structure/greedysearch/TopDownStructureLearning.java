@@ -9,6 +9,7 @@ import org.linqs.psl.model.atom.RandomVariableAtom;
 import org.linqs.psl.database.Database;
 import org.linqs.psl.application.util.Grounding;
 import org.linqs.psl.model.formula.Conjunction;
+import org.linqs.psl.model.formula.Disjunction;
 import org.linqs.psl.model.formula.Negation;
 import org.linqs.psl.model.formula.Formula;
 import org.linqs.psl.model.formula.Implication;
@@ -16,6 +17,7 @@ import org.linqs.psl.model.atom.QueryAtom;
 import org.linqs.psl.model.term.Variable;
 import org.linqs.psl.model.predicate.Predicate;
 import org.linqs.psl.model.predicate.StandardPredicate;
+import org.linqs.psl.model.predicate.PredicateFactory;
 import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.BeamSearch;
 import org.linqs.psl.application.learning.structure.greedysearch.searchalgo.Search;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.Scorer;
@@ -116,7 +118,10 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			int numGroundings = Grounding.groundRule(unitRule, trainingMap, groundRuleStore);
 		}
 		try{
-			mpll.learn();
+			if(doLearning){
+				mpll.learn();	
+			}
+			
 			initScore = scorer.scoreModel();
 		}
 		catch(Exception ex){
@@ -138,7 +143,9 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			}
 
 			try{
-				mpll.learn();
+				if(doLearning){
+					mpll.learn();	
+				}
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){
@@ -157,8 +164,12 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 	private Set<Formula> getUnitClauses(boolean getPositiveClauses){
 
 		Set<Formula> unitClauses = new HashSet<Formula>();
+		PredicateFactory pf = PredicateFactory.getFactory();
 
 		for (Predicate p : targetPredicates){
+			String predName = p.getName().toLowerCase();
+			Predicate targetScopingPred = pf.getPredicate(predName + "Target");
+
 			int arity = p.getArity();
 			Variable[] arguments = new Variable[arity];
 			for(int i = 0; i < arity; i++){
@@ -166,10 +177,12 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			}
 
 			Formula unitClause = new QueryAtom(p, arguments);
-			unitClauses.add(new Negation(unitClause));
+			Formula scopingLiteral = new Negation(new QueryAtom(targetScopingPred, arguments));
+
+			unitClauses.add(new Disjunction(scopingLiteral, new Negation(unitClause)));
 
 			if(getPositiveClauses){
-				unitClauses.add(unitClause);	
+				unitClauses.add(new Disjunction(scopingLiteral, unitClause));	
 			}
 		}
 
