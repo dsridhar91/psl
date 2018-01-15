@@ -116,7 +116,10 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			int numGroundings = Grounding.groundRule(unitRule, trainingMap, groundRuleStore);
 		}
 		try{
-			mpll.learn();
+			if(doLearning){
+				mpll.learn();	
+			}
+			
 			initScore = scorer.scoreModel();
 		}
 		catch(Exception ex){
@@ -138,7 +141,9 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			}
 
 			try{
-				mpll.learn();
+				if(doLearning){
+					mpll.learn();	
+				}
 				initScore = scorer.scoreModel();	
 			}
 			catch(Exception ex){

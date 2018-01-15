@@ -119,7 +119,9 @@ public class BeamSearch extends Search{
 				this.model.addRule(candidateRule);
 
 				try{
-					this.mpll.learn();
+					if(doLearning){
+						this.mpll.learn();	
+					}
 					currentModelScore = this.wpll.scoreModel();
 				}
 				catch(Exception ex){
