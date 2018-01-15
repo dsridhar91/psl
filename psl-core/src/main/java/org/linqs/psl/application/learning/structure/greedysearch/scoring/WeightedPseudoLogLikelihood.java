@@ -205,16 +205,25 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double step = 1.0 / gridSize; 
 
 		double currValue = a.getValue();
+		double incompatibility[] = new double[gridSize];
+		double max = Double.NEGATIVE_INFINITY;
+		double totalIncompatibility = 0;
+
 		for (int i = 0; i < gridSize; i++) {
 		       a.setValue(i*step);
-		       //a.commitToDB();
-
-		       double incomp = computeObservedIncomp();
-		       cumSum += step * Math.exp(-incomp); 
+		       incompatibility[i] = -1*computeObservedIncomp();
+		       if(incompatibility[i] > max) {
+			      max = incompatibility[i];
+			} 
 		}	       
 
+		for (int i = 0; i < gridSize; i++) {
+			totalIncompatibility += Math.exp(incompatibility[i] - max);
+		}
+		totalIncompatibility = max + Math.log(totalIncompatibility + 1e-6) + Math.log(step + 1e-6);
+			
 		a.setValue(currValue);
-		return Math.log(cumSum);
+		return totalIncompatibility;
 	}
 	
 	protected double computeRegularizer() {
