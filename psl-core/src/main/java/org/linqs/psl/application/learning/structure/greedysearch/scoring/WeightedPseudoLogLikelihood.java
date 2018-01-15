@@ -150,8 +150,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double l2_norm = -1 * l2_norm() * l2Regularization;
 		double struct_norm = -1 * num_predicates() * l1Regularization;
 		double pll = -1 * (numRV * incomp + marginalProduct) + l2_norm + struct_norm;
-		System.out.println(model);
-		System.out.println(pll);
+		// System.out.println(model);
+		// System.out.println(pll);
 
 		log.debug(model.toString());
 		log.debug("Score: " + pll);
