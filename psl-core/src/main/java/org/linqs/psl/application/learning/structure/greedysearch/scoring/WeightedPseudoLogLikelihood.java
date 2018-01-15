@@ -15,10 +15,12 @@ import org.linqs.psl.database.Database;
 import org.linqs.psl.model.predicate.StandardPredicate;
 import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.RandomVariableAtom;
+import org.linqs.psl.model.atom.Atom;
 import org.linqs.psl.model.Model;
 import org.linqs.psl.model.rule.GroundRule;
 import org.linqs.psl.model.rule.WeightedGroundRule;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.weight.NegativeWeight;
 import org.linqs.psl.model.weight.PositiveWeight;
@@ -145,41 +147,43 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 				}
 			}
 		}
-		// double l2_norm = -1 * this.l2_norm() * this.l2Regularization;
-		// double struct_norm = -1 * this.num_predicates() * this.l1Regulariztion;
-		double pll = -1 * (numRV * incomp + marginalProduct); // + l2_norm + struct_norm;
+		double l2_norm = -1 * l2_norm() * l2Regularization;
+		double struct_norm = -1 * num_predicates() * l1Regularization;
+		double pll = -1 * (numRV * incomp + marginalProduct) + l2_norm + struct_norm;
+		System.out.println(model);
+		System.out.println(pll);
 
 		log.debug(model.toString());
 		log.debug("Score: " + pll);
 
-		//System.out.println("PLL" + pll);
 		return pll;
 	}
 
-	// protected double l2_norm() {
+	protected double l2_norm() {
 
-	// 	double l2norm = 0.0;
+	 	double l2norm = 0.0;
 
-	// 	Iterable<Rule> rules = model.getRules();
-	// 	for(Rule r : rules) {
-	// 		w = r.getWeight().getWeight();
-	// 		l2norm += w*w;
-	// 	}
+	 	Iterable<Rule> rules = model.getRules();
+	 	for(Rule r : rules) {
+	 		double w = ((WeightedRule)r).getWeight().getWeight();
+	 		l2norm += w*w;
+	 	}
 
-	// 	return l2norm;
-	// }
+	 	return l2norm;
+	}
 
-	// protected double num_predicates() {
+	protected double num_predicates() {
 
-	// 	double numPredicates = 0;
+	 	double numPredicates = 0;
+	 	Iterable<Rule> rules = model.getRules();
+	 	for (Rule r: rules) {
+			Set<Atom> predicates = new HashSet<Atom>();
+	 		predicates = ((WeightedLogicalRule)r).getFormula().getAtoms(predicates);
+			numPredicates += predicates.size();
+	 	}
 
-	// 	Iterable<Rule> rules = model.getRules();
-	// 	for (Rule r: rules) {
-	// 		numPredicates += r.getAtoms().size();
-	// 	}
-
-	// 	return numPredicates;
-	// }
+	 	return numPredicates;
+	}
 
 
 	protected double computeObservedIncomp() {
@@ -195,17 +199,6 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		return truthIncompatibility;
 	}
 
-	/*protected double computeObservedIncomp(RandomVariableAtom atom){
-
-		double incompatabilty = 0.0;
-		for(GroundRule groundRule: atom.getRegisteredGroundKernels()){
-			incompatabilty += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
-		}
-
-		return incompatabilty;
-
-	}*/
-	
 	protected double computeMarginal(RandomVariableAtom a) {
 		
 		double cumSum = 0.0;
@@ -223,20 +216,6 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		a.setValue(currValue);
 		return Math.log(cumSum);
 	}
-	
-	/**
-	 * Computes the expected (unweighted) total incompatibility of the
-	 * {@link WeightedGroundRule GroundCompatibilityKernels} in reasoner
-	 * for each {@link WeightedRule}.
-	 * 
-	 * @return expected incompatibilities, ordered according to kernels
-	 */
-	/*protected double[] computeExpectedIncomp(){
-
-		/*TODO: implement this following MaxPseudoLikelihood
-
-		
-	}*/
 	
 	protected double computeRegularizer() {
 		double l2 = 0;

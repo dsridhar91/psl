@@ -210,6 +210,9 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 		catch (IllegalArgumentException ex){
 			String[] variables = ex.toString().split("\\[")[1].split("\\]")[0].replace(" ","").split(",");
 			int numVariables = variables.length;
+			if(numVariables > 1) {
+				return null;
+			}
 			Term[] terms = new Term[numVariables];
 			for(int i = 0; i < numVariables; i++) {
 				terms[i] = new Variable(variables[i]);
