@@ -37,6 +37,7 @@ import org.linqs.psl.model.atom.ObservedAtom;
 import org.linqs.psl.model.atom.QueryAtom;
 import org.linqs.psl.model.atom.SimpleAtomManager;
 import org.linqs.psl.model.formula.Conjunction;
+import org.linqs.psl.model.term.Term;
 import org.linqs.psl.model.formula.Disjunction;
 import org.linqs.psl.model.formula.Negation;
 import org.linqs.psl.model.formula.Formula;
@@ -261,6 +262,19 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 	       	
 	}
 
+	private boolean isRepeatedVariable(Term[] args, int arity) {
+		Set<Term> vars = new HashSet<Term>();
+		for(int i = 0; i < arity; i++) {
+			if(vars.contains(args[i])) {
+				return true;
+			}
+			else {
+				vars.add(args[i]);
+			}
+		}
+		return false;
+	}
+
 	public void createCandidateClauses(Set<Formula> initialClauses) {
 
 		candidateClauses = new ArrayList<Formula>();
@@ -286,18 +300,22 @@ public class ClauseConstructor implements Iterator<WeightedRule> {
 				
 				if (c instanceof Disjunction){
 					for(int i = 0; i < numRules; i++) {
-						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
-						candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new QueryAtom(p, args[i])));					
+						if(!isRepeatedVariable(args[i], arity)) {
+							candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new Negation(new QueryAtom(p, args[i]))));					
+							candidateClauses.add( new Disjunction(((Disjunction) c).flatten(), new QueryAtom(p, args[i])));					
+						}
 					}
 				}
 				else{
 					Disjunction newClause = null;
 					for(int i = 0; i < numRules; i++) {
-						newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
-						//lexsortvariable(newClause);
-						candidateClauses.add(newClause);	
-						newClause = new Disjunction(c, new QueryAtom(p, args[i]));
-						candidateClauses.add(newClause);	
+						if(!isRepeatedVariable(args[i], arity)) {
+							newClause = new Disjunction(c, new Negation(new QueryAtom(p, args[i])));
+							//lexsortvariable(newClause);
+							candidateClauses.add(newClause);	
+							newClause = new Disjunction(c, new QueryAtom(p, args[i]));
+							candidateClauses.add(newClause);	
+						}
 					}
 				}
 			}
