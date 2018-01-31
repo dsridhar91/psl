@@ -105,7 +105,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 
 		Set<Formula> unitClauses = getUnitClauses(true);
 
-		ConstraintFreeMPLE mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
+		//ConstraintFreeMPLE mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);	
+		MaxLikelihoodMPE mpll = new MaxLikelihoodMPE(model, rvDB, observedDB, config, groundRuleStore);
 		Search searchAlgorithm = new BeamSearch(model, rvDB, observedDB, config, unitClauses, targetPredicates, observedPredicates, predicateTypeMap, groundRuleStore);
 		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 

@@ -133,30 +133,40 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		*/
 
 
-		// double incomp = computeObservedIncomp();
+		double origIncomp = computeObservedIncomp();
 		double incomp = 0.0;
 		double marginalProduct = 0;
 		double numRV = 0;
+		double marginalFull = 0.0;
 
 		Set<StandardPredicate> targetPredicates = rvDB.getRegisteredPredicates();
 		for(StandardPredicate p: targetPredicates) {
 			if(!rvDB.isClosed(p)) {
 				List<RandomVariableAtom> rvAtoms = rvDB.getAllGroundRandomVariableAtoms(p);
 				for(RandomVariableAtom a : rvAtoms) {
-					incomp += computeObservedIncomp(a);
+					double currentIncomp = computeObservedIncomp(a);
+					incomp += currentIncomp;
 					numRV++;
-					marginalProduct += computeMarginal(a);
+					double marginal = computeMarginal(a);
+					marginalProduct += marginal;
+					double currentLongMarg = computeLongMarginal(a);
+					marginalFull += currentLongMarg;
+					log.warn("marginal: " + marginal + "; incomp: "+ currentIncomp );
+					log.warn("marginal orginal: " + currentLongMarg  + "; incomp: "+ origIncomp);
+					log.warn("atom: " + a );
 				}
 			}
 		}
 		double l2_norm = -1 * l2_norm() * l2Regularization;
 		double struct_norm = -1 * num_predicates() * l1Regularization;
 		double pll = -1 * (incomp + marginalProduct) + l2_norm + struct_norm;
+		double  origPll = -1 * (numRV*computeObservedIncomp() + marginalFull) + l2_norm + struct_norm;
 		// System.out.println(model);
 		// System.out.println(pll);
 
-		log.debug(model.toString());
-		log.debug("Score: " + pll);
+		log.warn(model.toString());
+		log.warn("Score: " + pll);
+		log.warn("Original Score: " + origPll);
 
 		return pll;
 	}
@@ -207,7 +217,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double truthIncompatibility = 0;
 		
 		/* Computes the observed incompatibilities for only one atom  */
-		
+		log.warn("" + atom.getRegisteredGroundRules().size());	
 		for (GroundRule groundRule : atom.getRegisteredGroundRules()) {
 			truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
 		}
@@ -216,6 +226,32 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	}
 
 
+	protected double computeLongMarginal(RandomVariableAtom a) {
+		
+		double cumSum = 0.0;
+		double step = 1.0 / gridSize; 
+
+		double currValue = a.getValue();
+		double incompatibility[] = new double[gridSize];
+		double max = Double.NEGATIVE_INFINITY;
+		double totalIncompatibility = 0;
+
+		for (int i = 0; i < gridSize; i++) {
+		       a.setValue(i*step);
+		       incompatibility[i] = -1*computeObservedIncomp();
+		       if(incompatibility[i] > max) {
+			      max = incompatibility[i];
+			} 
+		}	       
+
+		for (int i = 0; i < gridSize; i++) {
+			totalIncompatibility += Math.exp(incompatibility[i] - max);
+		}
+		totalIncompatibility = max + Math.log(totalIncompatibility + 1e-6) + Math.log(step + 1e-6);
+			
+		a.setValue(currValue);
+		return totalIncompatibility;
+	}
 
 	protected double computeMarginal(RandomVariableAtom a) {
 		

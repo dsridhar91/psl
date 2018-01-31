@@ -80,7 +80,7 @@ public class BeamSearch extends Search{
 
 	@Override
 	protected Set<WeightedRule> doSearch(double startingScore){
-
+		
 		double previousBestGain = 0.0;
 		double bestGain = 0.0;
 		Formula bestClause = null;
@@ -130,6 +130,7 @@ public class BeamSearch extends Search{
 				}
 
 				double currentGain = currentModelScore - startingScore;
+				log.warn("Current candidate: "+ candidateRule + " has gain of: " + currentGain);
 
 				if (currentGain > 0){
 					Formula currentFormula = ((WeightedLogicalRule)candidateRule).getFormula();

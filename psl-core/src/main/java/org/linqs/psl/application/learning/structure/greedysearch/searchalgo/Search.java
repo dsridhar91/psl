@@ -67,8 +67,8 @@ public abstract class Search extends Observable implements ModelApplication
 	
 	protected ClauseConstructor clConstr;
 	// protected MaxPseudoLikelihood mpll;
-	protected ConstraintFreeMPLE mpll;
-	// protected MaxLikelihoodMPE mpll;
+	//protected ConstraintFreeMPLE mpll;
+	 protected MaxLikelihoodMPE mpll;
 	protected WeightedPseudoLogLikelihood wpll;
 	
 	protected Set<Formula> unitClauses;
@@ -87,7 +87,7 @@ public abstract class Search extends Observable implements ModelApplication
 		this.predicateTypeMap = predicateTypeMap;
 		this.groundRuleStore = groundRuleStore;
 
-		mpll = new ConstraintFreeMPLE(model, rvDB, observedDB, config, groundRuleStore);
+		mpll = new MaxLikelihoodMPE(model, rvDB, observedDB, config, groundRuleStore);
 		wpll = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 		doLearning = config.getBoolean(DO_LEARNING_KEY, DO_LEARNING_DEFAULT);
