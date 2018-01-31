@@ -125,6 +125,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		super.initGroundModel();
 
+		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 		for (GroundRule groundRule : groundRuleStore.getGroundRules()) {
 			if (!(groundRule instanceof WeightedGroundRule)) {
 				throw new IllegalArgumentException("WPLL only supports weighted ground rules.");
