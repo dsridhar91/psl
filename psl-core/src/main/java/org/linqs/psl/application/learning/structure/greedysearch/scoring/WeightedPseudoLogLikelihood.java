@@ -133,7 +133,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		*/
 
 
-		double incomp = computeObservedIncomp();
+		// double incomp = computeObservedIncomp();
+		double incomp = 0.0;
 		double marginalProduct = 0;
 		double numRV = 0;
 
@@ -142,6 +143,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			if(!rvDB.isClosed(p)) {
 				List<RandomVariableAtom> rvAtoms = rvDB.getAllGroundRandomVariableAtoms(p);
 				for(RandomVariableAtom a : rvAtoms) {
+					incomp += computeObservedIncomp(a);
 					numRV++;
 					marginalProduct += computeMarginal(a);
 				}
@@ -149,7 +151,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		}
 		double l2_norm = -1 * l2_norm() * l2Regularization;
 		double struct_norm = -1 * num_predicates() * l1Regularization;
-		double pll = -1 * (numRV * incomp + marginalProduct) + l2_norm + struct_norm;
+		double pll = -1 * (incomp + marginalProduct) + l2_norm + struct_norm;
 		// System.out.println(model);
 		// System.out.println(pll);
 
@@ -199,6 +201,22 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		return truthIncompatibility;
 	}
 
+
+
+	protected double computeObservedIncomp(RandomVariableAtom atom) {
+		double truthIncompatibility = 0;
+		
+		/* Computes the observed incompatibilities for only one atom  */
+		
+		for (GroundRule groundRule : atom.getRegisteredGroundRules()) {
+			truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
+		}
+		
+		return truthIncompatibility;
+	}
+
+
+
 	protected double computeMarginal(RandomVariableAtom a) {
 		
 		double cumSum = 0.0;
@@ -211,7 +229,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 		for (int i = 0; i < gridSize; i++) {
 		       a.setValue(i*step);
-		       incompatibility[i] = -1*computeObservedIncomp();
+		       incompatibility[i] = -1*computeObservedIncomp(a);
 		       if(incompatibility[i] > max) {
 			      max = incompatibility[i];
 			} 
