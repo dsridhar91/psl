@@ -125,6 +125,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected void initGroundModel() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 		super.initGroundModel();
 
+		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 		for (GroundRule groundRule : groundRuleStore.getGroundRules()) {
 			if (!(groundRule instanceof WeightedGroundRule)) {
 				throw new IllegalArgumentException("WPLL only supports weighted ground rules.");
@@ -142,8 +143,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 				atomRuleMap.get(rvAtom).add((WeightedGroundRule)groundRule);
 			}
-		}
 
+		}
 	}
 
 
@@ -151,20 +152,20 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	@Override
 	protected double doScoring() {
 
-		double origIncomp = computeObservedIncomp();
+		//double origIncomp = computeObservedIncomp();
 		double incomp = 0.0;
 		double marginalProduct = 0;
-		double numRV = 0;
-		double marginalFull = 0.0;
+		//double numRV = 0;
+		//double marginalFull = 0.0;
 
 		for(RandomVariableAtom a : atomRuleMap.keySet()) {
 			double currentIncomp = computeObservedIncomp(a);
 			incomp += currentIncomp;
-			numRV++;
+			//numRV++;
 			double marginal = computeMarginal(a);
 			marginalProduct += marginal;
-			double currentLongMarg = computeLongMarginal(a);
-			marginalFull += currentLongMarg;
+			//double currentLongMarg = computeLongMarginal(a);
+			//marginalFull += currentLongMarg;
 			// log.warn("marginal: " + marginal + "; incomp: "+ currentIncomp );
 			// log.warn("marginal orginal: " + currentLongMarg  + "; incomp: "+ origIncomp);
 			// log.warn("atom: " + a );
@@ -173,13 +174,13 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double l2_norm = -1 * l2_norm() * l2Regularization;
 		double struct_norm = -1 * num_predicates() * l1Regularization;
 		double pll = -1 * (incomp + marginalProduct) + l2_norm + struct_norm;
-		double  origPll = -1 * (numRV*computeObservedIncomp() + marginalFull) + l2_norm + struct_norm;
+		//double  origPll = -1 * (numRV*computeObservedIncomp() + marginalFull) + l2_norm + struct_norm;
 		// System.out.println(model);
 		// System.out.println(pll);
 
 		log.info(model.toString());
 		log.info("Score: " + pll);
-		log.info("Original Score: " + origPll);
+		//log.info("Original Score: " + origPll);
 
 		return pll;
 	}
