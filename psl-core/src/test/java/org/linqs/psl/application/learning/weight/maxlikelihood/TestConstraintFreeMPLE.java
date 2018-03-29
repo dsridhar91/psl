@@ -11,6 +11,7 @@ import org.linqs.psl.application.groundrulestore.GroundRuleStore;
 import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
 import org.linqs.psl.application.learning.weight.maxlikelihood.ConstraintFreeMPLE;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE;
+import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPiecewisePseudoLikelihood;
 import org.linqs.psl.application.learning.structure.StructureLearningApplication;
 import org.linqs.psl.application.learning.structure.greedysearch.TopDownStructureLearning;
 import org.linqs.psl.application.learning.structure.greedysearch.scoring.WeightedPseudoLogLikelihood;
@@ -157,8 +158,9 @@ public class TestConstraintFreeMPLE {
 			// observedPredicates.add(singlePredicate);
 			// observedPredicates.add(doublePredicateObs);
 
-			ConstraintFreeMPLE cfmple = new ConstraintFreeMPLE(model, rvDB, truthDB, config);
-			cfmple.learn();
+			MaxPiecewisePseudoLikelihood mpple = new MaxPiecewisePseudoLikelihood(model, rvDB, truthDB, config);
+			//MaxLikelihoodMPE mpe = new MaxLikelihoodMPE(model, rvDB, truthDB, config);
+			mpple.learn();
 			System.out.println(model);
 			
 		} catch(Exception ex) {

@@ -149,8 +149,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 				atomRuleMap.get(rvAtom).add((WeightedGroundRule)groundRule);
 			}
-		}
 
+		}
 	}
 
 
@@ -158,7 +158,6 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	@Override
 	protected double doScoring() {
 
-		
 		double incomp = 0.0;
 		double marginalProduct = 0;
 		double numRV = 0;
@@ -166,10 +165,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		for(RandomVariableAtom a : atomRuleMap.keySet()) {
 			double currentIncomp = computeObservedIncomp(a);
 			incomp += currentIncomp;
-			numRV++;
 			double marginal = computeMarginal(a);
 			marginalProduct += marginal;
-						
 		}
 
 		double l2_norm = -1 * l2_norm() * l2Regularization;
