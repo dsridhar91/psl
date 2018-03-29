@@ -108,7 +108,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 	 */
 	public static final String STEP_SIZE_KEY = CONFIG_PREFIX + ".stepsize";
 	/** Default value for STEP_SIZE_KEY */
-	public static final double STEP_SIZE_DEFAULT = 1.0;
+	public static final double STEP_SIZE_DEFAULT = 0.1;
 
 	/**
 	 * Key for Boolean property that indicates whether to shrink the stepsize by
@@ -116,7 +116,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 	 */
 	public static final String STEP_SCHEDULE_KEY = CONFIG_PREFIX + ".schedule";
 	/** Default value for STEP_SCHEDULE_KEY */
-	public static final boolean STEP_SCHEDULE_DEFAULT = true;
+	public static final boolean STEP_SCHEDULE_DEFAULT = false;
 
 	/**
 	 * Key for Boolean property that indicates whether to scale gradient by 
@@ -132,7 +132,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 	 */
 	public static final String AVERAGE_STEPS_KEY = CONFIG_PREFIX + ".averagesteps";
 	/** Default value for AVERAGE_STEPS_KEY */
-	public static final boolean AVERAGE_STEPS_DEFAULT = true;
+	public static final boolean AVERAGE_STEPS_DEFAULT = false;
 
 	/**
 	 * Key for positive integer property. VotedPerceptron will take this many
@@ -140,7 +140,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 	 */
 	public static final String NUM_STEPS_KEY = CONFIG_PREFIX + ".numsteps";
 	/** Default value for NUM_STEPS_KEY */
-	public static final int NUM_STEPS_DEFAULT = 25;
+	public static final int NUM_STEPS_DEFAULT = 500;
 	
 	/**
 	 * Key for boolean property. If true, only non-negative weights will be learned. 
@@ -262,6 +262,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 	protected void doLearn() {
 		double[] avgWeights;
 		double[] scalingFactor;
+		double oldLoss = Double.NEGATIVE_INFINITY;
 		
 		avgWeights = new double[rules.size()];
 		
@@ -284,7 +285,6 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 			/* Computes the expected total incompatibility for each CompatibilityRule */
 			expectedIncompatibility = computeExpectedIncomp();
 			scalingFactor  = computeScalingFactor();
-			loss = computeLoss();
 			
 			/* Updates weights */
 			for (int i = 0; i < rules.size(); i++) {
@@ -293,6 +293,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 						- l2Regularization * weight
 						- l1Regularization) / scalingFactor[i];
 				currentStep *= getStepSize(step);
+				System.out.println("Gradient: Rule" + i + " " + currentStep);
 
 				log.debug("Step of {} for rule {}", currentStep, rules.get(i));
 				log.debug(" --- Expected incomp.: {}, Truth incomp.: {}", expectedIncompatibility[i], truthIncompatibility[i]);
@@ -305,6 +306,15 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 			}
 			
 			changedRuleWeights = true;
+			loss = computeLoss();
+			System.out.println("Objective Value: " + loss);
+			if(loss > oldLoss) {
+				oldLoss = loss;
+			}
+			else {
+				break;
+			}
+
 
 			// notify the registered observers
 			setChanged();

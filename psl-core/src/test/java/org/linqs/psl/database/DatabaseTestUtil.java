@@ -57,7 +57,7 @@ public class DatabaseTestUtil {
 	}
 
 	public static DatabaseDriver getH2Driver(boolean clear) {
-		return new H2DatabaseDriver(H2DatabaseDriver.Type.Disk, DB_BASE_PATH, clear);
+		return new H2DatabaseDriver(H2DatabaseDriver.Type.Memory, DB_BASE_PATH, clear);
 	}
 
 	public static DatabaseDriver getPostgresDriver() {
