@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Random;
 
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
@@ -65,6 +66,9 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	public static final String GRIDSIZE_KEY = CONFIG_PREFIX + ".gridsize";
 	public static final int GRIDSIZE_DEFAULT = 5;
 
+	public static final String GRIDSIZE_KEY = CONFIG_PREFIX + ".maxgroundings";
+	public static final int GRIDSIZE_DEFAULT = 100;
+
 	/**
 	 * Key for Boolean property that indicates whether to scale pseudolikelihood by number of groundings per predicate
 	 */
@@ -76,6 +80,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected final double l1Regularization;
 	protected final boolean scalePLL;
 	protected final int gridSize;
+	protected final int maxAtomGroundRules;
 
 	private Map<RandomVariableAtom, List<WeightedGroundRule>> atomRuleMap;
 
@@ -126,6 +131,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		super.initGroundModel();
 
 		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
+
 		for (GroundRule groundRule : groundRuleStore.getGroundRules()) {
 			if (!(groundRule instanceof WeightedGroundRule)) {
 				throw new IllegalArgumentException("WPLL only supports weighted ground rules.");
@@ -152,11 +158,10 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	@Override
 	protected double doScoring() {
 
-		double origIncomp = computeObservedIncomp();
+		
 		double incomp = 0.0;
 		double marginalProduct = 0;
 		double numRV = 0;
-		double marginalFull = 0.0;
 
 		for(RandomVariableAtom a : atomRuleMap.keySet()) {
 			double currentIncomp = computeObservedIncomp(a);
@@ -164,23 +169,15 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			numRV++;
 			double marginal = computeMarginal(a);
 			marginalProduct += marginal;
-			double currentLongMarg = computeLongMarginal(a);
-			marginalFull += currentLongMarg;
-			// log.warn("marginal: " + marginal + "; incomp: "+ currentIncomp );
-			// log.warn("marginal orginal: " + currentLongMarg  + "; incomp: "+ origIncomp);
-			// log.warn("atom: " + a );
+						
 		}
 
 		double l2_norm = -1 * l2_norm() * l2Regularization;
 		double struct_norm = -1 * num_predicates() * l1Regularization;
 		double pll = -1 * (incomp + marginalProduct) + l2_norm + struct_norm;
-		double  origPll = -1 * (numRV*computeObservedIncomp() + marginalFull) + l2_norm + struct_norm;
-		// System.out.println(model);
-		// System.out.println(pll);
-
+		
 		log.info(model.toString());
 		log.info("Score: " + pll);
-		log.info("Original Score: " + origPll);
 
 		return pll;
 	}
@@ -230,9 +227,22 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected double computeObservedIncomp(RandomVariableAtom atom) {
 		double truthIncompatibility = 0;
 		
-		/* Computes the observed incompatibilities for only one atom  */
-		for (GroundRule groundRule : atomRuleMap.get(atom)) {
-			truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
+		List<WeightedGroundRule> atomGroundings = atomRuleMap.get(atom);
+		Random random = new Random();
+
+		if(atomGroundings.size() <= maxAtomGroundRules)
+			/* Computes the observed incompatibilities for only one atom  */
+			for (GroundRule groundRule : atomRuleMap.get(atom)) {
+				truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
+			}
+		else{
+			int count = 0;
+			while(count <= maxAtomGroundRules){
+				int randIndex = random.nextInt(atomGroundings.size());
+				GroundRule groundRule = atomGroundings.get(randIndex);
+				truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();	
+			}
+			
 		}
 		
 		return truthIncompatibility;
