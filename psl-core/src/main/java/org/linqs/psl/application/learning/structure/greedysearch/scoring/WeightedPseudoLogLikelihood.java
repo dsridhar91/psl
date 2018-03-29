@@ -66,8 +66,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	public static final String GRIDSIZE_KEY = CONFIG_PREFIX + ".gridsize";
 	public static final int GRIDSIZE_DEFAULT = 5;
 
-	public static final String GRIDSIZE_KEY = CONFIG_PREFIX + ".maxgroundings";
-	public static final int GRIDSIZE_DEFAULT = 100;
+	public static final String MAX_GROUNDINGS_KEY = CONFIG_PREFIX + ".maxgroundings";
+	public static final int MAX_GROUNDINGS_DEFAULT = 100;
 
 	/**
 	 * Key for Boolean property that indicates whether to scale pseudolikelihood by number of groundings per predicate
@@ -101,6 +101,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			throw new IllegalArgumentException("Gridsize must be non-negative.");
 
 		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
+		maxAtomGroundRules = config.getInteger(MAX_GROUNDINGS_KEY, MAX_GROUNDINGS_DEFAULT);
 
 		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 	}
@@ -121,6 +122,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			throw new IllegalArgumentException("Gridsize must be non-negative.");
 
 		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
+		maxAtomGroundRules = config.getInteger(MAX_GROUNDINGS_KEY, MAX_GROUNDINGS_DEFAULT);
 
 		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 	}
@@ -175,6 +177,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		
 		log.info(model.toString());
 		log.info("Score: " + pll);
+		System.out.println("Score: " + pll);
 
 		return pll;
 	}
