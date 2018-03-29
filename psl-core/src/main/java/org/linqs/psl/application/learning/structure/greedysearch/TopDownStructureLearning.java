@@ -123,7 +123,8 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 				mpll.learn();	
 			}
 			
-			initScore = scorer.scoreModel();
+			//initScore = scorer.scoreModel();
+			initScore = 0.0;
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
