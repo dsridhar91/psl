@@ -240,7 +240,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 			while(count <= maxAtomGroundRules){
 				int randIndex = random.nextInt(atomGroundings.size());
 				GroundRule groundRule = atomGroundings.get(randIndex);
-				truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();	
+				truthIncompatibility += ((WeightedGroundRule) groundRule).getWeight().getWeight() * ((WeightedGroundRule) groundRule).getIncompatibility();
+				count++;
 			}
 			
 		}

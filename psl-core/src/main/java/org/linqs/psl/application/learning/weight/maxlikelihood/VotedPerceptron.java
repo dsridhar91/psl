@@ -293,7 +293,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 						- l2Regularization * weight
 						- l1Regularization) / scalingFactor[i];
 				currentStep *= getStepSize(step);
-				System.out.println("Gradient: Rule" + i + " " + currentStep);
+				
 
 				log.debug("Step of {} for rule {}", currentStep, rules.get(i));
 				log.debug(" --- Expected incomp.: {}, Truth incomp.: {}", expectedIncompatibility[i], truthIncompatibility[i]);
@@ -306,16 +306,7 @@ public abstract class VotedPerceptron extends WeightLearningApplication {
 			}
 			
 			changedRuleWeights = true;
-			loss = computeLoss();
-			System.out.println("Objective Value: " + loss);
-			if(loss > oldLoss) {
-				oldLoss = loss;
-			}
-			else {
-				break;
-			}
-
-
+			
 			// notify the registered observers
 			setChanged();
 			notifyObservers(new IntermediateState(step, numSteps));
