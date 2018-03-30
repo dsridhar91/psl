@@ -111,7 +111,7 @@ public class BeamSearch extends Search{
 					continue;
 				}
 
-				// log.warn("Current candidate rule:" + candidateRule);
+				log.warn("Current candidate rule:" + candidateRule);
 
 				Map<WeightedRule,Double> currentModelWeightsMap = this.getRuleWeights();
 				double currentModelScore = -100.00;

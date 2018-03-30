@@ -124,7 +124,7 @@ public class TopDownStructureLearning  extends StructureLearningApplication {
 			}
 			
 			//initScore = scorer.scoreModel();
-			initScore = 0;
+			initScore = 0.0;
 		}
 		catch(Exception ex){
 			ex.printStackTrace();
