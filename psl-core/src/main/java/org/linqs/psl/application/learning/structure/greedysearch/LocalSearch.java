@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
 
 public class LocalSearch extends StructureSelectionApplication {
 	
-	private static final Logger log = LoggerFactory.getLogger(TopDownStructureLearning.class);
+	private static final Logger log = LoggerFactory.getLogger(LocalSearch.class);
 	/**
 	 * Prefix of property keys used by this class.
 	 *
@@ -125,7 +125,7 @@ public class LocalSearch extends StructureSelectionApplication {
 				try{
 					mle.learn();
 					log.warn("Learning complete");
-					
+
 					score = scorer.scoreModel();
 					log.warn("Scoring complete");
 				}
@@ -181,15 +181,15 @@ public class LocalSearch extends StructureSelectionApplication {
 			}
 
 			if(bestRule != null){
-				candidateRuleSet.remove(bestRule);
+				
 				if(addRule){
+					candidateRuleSet.remove(bestRule);
 					model.addRule(bestRule);
 					Grounding.groundRule(bestRule, trainingMap, groundRuleStore);
 				}
 				else{
 					model.removeRule(bestRule);
-					Grounding.removeRule(bestRule, groundRuleStore);
-					
+					Grounding.removeRule(bestRule, groundRuleStore);	
 				}
 			}
 			
