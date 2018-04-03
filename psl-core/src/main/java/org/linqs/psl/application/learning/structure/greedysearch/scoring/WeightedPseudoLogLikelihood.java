@@ -69,6 +69,10 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	public static final String MAX_GROUNDINGS_KEY = CONFIG_PREFIX + ".maxgroundings";
 	public static final int MAX_GROUNDINGS_DEFAULT = 100;
 
+	public static final String RANDOM_SEED_KEY = CONFIG_PREFIX + ".randomseed";
+	public static final int RANDOM_SEED_DEFAULT = 42;
+
+
 	/**
 	 * Key for Boolean property that indicates whether to scale pseudolikelihood by number of groundings per predicate
 	 */
@@ -81,6 +85,8 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 	protected final boolean scalePLL;
 	protected final int gridSize;
 	protected final int maxAtomGroundRules;
+	protected final int randomSeed;
+	protected final Random random;
 
 	private Map<RandomVariableAtom, List<WeightedGroundRule>> atomRuleMap;
 
@@ -103,6 +109,10 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
 		maxAtomGroundRules = config.getInteger(MAX_GROUNDINGS_KEY, MAX_GROUNDINGS_DEFAULT);
 
+		randomSeed = config.getInteger(RANDOM_SEED_KEY, RANDOM_SEED_DEFAULT);
+
+		random = new Random(randomSeed);
+
 		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 	}
 
@@ -123,6 +133,11 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 
 		scalePLL = config.getBoolean(SCALE_PLL_KEY, SCALE_PLL_DEFAULT);
 		maxAtomGroundRules = config.getInteger(MAX_GROUNDINGS_KEY, MAX_GROUNDINGS_DEFAULT);
+
+		randomSeed = config.getInteger(RANDOM_SEED_KEY, RANDOM_SEED_DEFAULT);
+
+		random = new Random(randomSeed);
+
 
 		atomRuleMap = new HashMap<RandomVariableAtom, List<WeightedGroundRule>>();
 	}
@@ -228,7 +243,7 @@ public class WeightedPseudoLogLikelihood extends Scorer{
 		double truthIncompatibility = 0;
 		
 		List<WeightedGroundRule> atomGroundings = atomRuleMap.get(atom);
-		Random random = new Random();
+		// Random random = new Random();
 
 		if(atomGroundings.size() <= maxAtomGroundRules)
 			/* Computes the observed incompatibilities for only one atom  */
