@@ -2,6 +2,7 @@ package org.linqs.psl.application.learning.structure.greedysearch;
 
 import org.linqs.psl.application.learning.structure.StructureSelectionApplication;
 import org.linqs.psl.application.groundrulestore.GroundRuleStore;
+import org.linqs.psl.application.groundrulestore.MemoryGroundRuleStore;
 import org.linqs.psl.config.ConfigBundle;
 import org.linqs.psl.config.ConfigManager;
 import org.linqs.psl.model.Model;
@@ -27,6 +28,8 @@ import org.linqs.psl.application.learning.weight.maxlikelihood.MaxPseudoLikeliho
 import org.linqs.psl.application.learning.weight.maxlikelihood.ConstraintFreeMPLE;
 import org.linqs.psl.application.learning.weight.maxlikelihood.MaxLikelihoodMPE;
 import org.linqs.psl.model.rule.WeightedRule;
+import org.linqs.psl.model.weight.Weight;
+import org.linqs.psl.model.weight.PositiveWeight;
 import org.linqs.psl.model.rule.Rule;
 import org.linqs.psl.model.rule.logical.WeightedLogicalRule;
 import org.linqs.psl.reasoner.Reasoner;
@@ -117,6 +120,8 @@ public class LocalSearch extends StructureSelectionApplication {
 			Rule bestRule = null;
 
 			for(Rule candRule : candidateRuleSet){
+				double originalWeight = ((WeightedRule)candRule).getWeight().getWeight();
+
 				log.warn("Trying to add rule : " + candRule);
 				model.addRule(candRule);
 				Grounding.groundRule(candRule, trainingMap, groundRuleStore);
@@ -124,6 +129,7 @@ public class LocalSearch extends StructureSelectionApplication {
 				double score = 0.0;
 				try{
 					mle.learn();
+					log.warn(model.toString());
 					log.warn("Learning complete");
 
 					score = scorer.scoreModel();
@@ -141,6 +147,7 @@ public class LocalSearch extends StructureSelectionApplication {
 
 				model.removeRule(candRule);
 				Grounding.removeRule(candRule, groundRuleStore);
+				((WeightedRule)candRule).setWeight(new PositiveWeight(originalWeight));
 
 			}
 
@@ -194,6 +201,7 @@ public class LocalSearch extends StructureSelectionApplication {
 			}
 			
 			log.warn("Iteration " + iter + " picked rule:" + bestRule + " with score " + bestScore);
+			((MemoryGroundRuleStore)groundRuleStore).testPrint();
 
 			iter++;
 		}
