@@ -151,41 +151,41 @@ public class LocalSearch extends StructureSelectionApplication {
 
 			}
 
-			Set<Rule> currentModelRules = new HashSet<Rule>();
-			for(Rule rule : model.getRules()){
-				currentModelRules.add(rule);
-			}
+			// Set<Rule> currentModelRules = new HashSet<Rule>();
+			// for(Rule rule : model.getRules()){
+			// 	currentModelRules.add(rule);
+			// }
 
-			if(!currentModelRules.isEmpty()){
-				for(Rule rule : currentModelRules){
+			// if(!currentModelRules.isEmpty()){
+			// 	for(Rule rule : currentModelRules){
 
-					log.warn("Trying to remove rule : " + rule);
+			// 		log.warn("Trying to remove rule : " + rule);
 
-					model.removeRule(rule);
-					Grounding.removeRule(rule, groundRuleStore);
+			// 		model.removeRule(rule);
+			// 		Grounding.removeRule(rule, groundRuleStore);
 
-					double score = 0.0;
-					try{
-						mle.learn();
-						log.warn("Learning complete");
+			// 		double score = 0.0;
+			// 		try{
+			// 			mle.learn();
+			// 			log.warn("Learning complete");
 
-						score = scorer.scoreModel();
-						log.warn("Scoring complete");
-					}
-					catch(Exception e){
-						e.printStackTrace();
-					}
+			// 			score = scorer.scoreModel();
+			// 			log.warn("Scoring complete");
+			// 		}
+			// 		catch(Exception e){
+			// 			e.printStackTrace();
+			// 		}
 
-					if(score > bestScore){
-						bestRule = rule;
-						addRule = false;
-						bestScore = score;
-					}
+			// 		if(score > bestScore){
+			// 			bestRule = rule;
+			// 			addRule = false;
+			// 			bestScore = score;
+			// 		}
 
-					model.addRule(rule);
-					Grounding.groundRule(rule, trainingMap, groundRuleStore);
-				}
-			}
+			// 		model.addRule(rule);
+			// 		Grounding.groundRule(rule, trainingMap, groundRuleStore);
+			// 	}
+			// }
 
 			if(bestRule != null){
 				
