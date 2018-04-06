@@ -104,11 +104,8 @@ public class LocalSearch extends StructureSelectionApplication {
 	@Override
 	protected void doLearn() {
 
-		// MaxLikelihoodMPE mle = new MaxLikelihoodMPE(model, rvDB, observedDB, config, groundRuleStore);
-		// Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
-
-		MaxLikelihoodMPE mle = new MaxLikelihoodMPE(model, rvDB, observedDB, config);
-		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config);
+		MaxLikelihoodMPE mle = new MaxLikelihoodMPE(model, rvDB, observedDB, config, groundRuleStore);
+		Scorer scorer = new WeightedPseudoLogLikelihood(model, rvDB, observedDB, config, groundRuleStore);
 
 		double bestScore = Double.NEGATIVE_INFINITY;
 		double previousBestScore = 0.0;
@@ -127,7 +124,7 @@ public class LocalSearch extends StructureSelectionApplication {
 
 				log.warn("Trying to add rule : " + candRule);
 				model.addRule(candRule);
-				// Grounding.groundRule(candRule, trainingMap, groundRuleStore);
+				Grounding.groundRule(candRule, trainingMap, groundRuleStore);
 
 				double score = 0.0;
 				try{
@@ -151,7 +148,7 @@ public class LocalSearch extends StructureSelectionApplication {
 				}
 
 				model.removeRule(candRule);
-				// Grounding.removeRule(candRule, groundRuleStore);
+				Grounding.removeRule(candRule, groundRuleStore);
 				
 			}
 
@@ -166,7 +163,7 @@ public class LocalSearch extends StructureSelectionApplication {
 					log.warn("Trying to remove rule : " + rule);
 
 					model.removeRule(rule);
-					// Grounding.removeRule(rule, groundRuleStore);
+					Grounding.removeRule(rule, groundRuleStore);
 
 					double score = 0.0;
 					try{
@@ -187,7 +184,7 @@ public class LocalSearch extends StructureSelectionApplication {
 					}
 
 					model.addRule(rule);
-					// Grounding.groundRule(rule, trainingMap, groundRuleStore);
+					Grounding.groundRule(rule, trainingMap, groundRuleStore);
 				}
 			}
 
@@ -196,11 +193,11 @@ public class LocalSearch extends StructureSelectionApplication {
 				if(addRule){
 					candidateRuleSet.remove(bestRule);
 					model.addRule(bestRule);
-					// Grounding.groundRule(bestRule, trainingMap, groundRuleStore);
+					Grounding.groundRule(bestRule, trainingMap, groundRuleStore);
 				}
 				else{
 					model.removeRule(bestRule);
-					// Grounding.removeRule(bestRule, groundRuleStore);	
+					Grounding.removeRule(bestRule, groundRuleStore);	
 				}
 			}
 			
